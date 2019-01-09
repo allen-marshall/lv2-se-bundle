@@ -1,1 +1,1 @@
-mod graph;
+pub mod bundle_model;
