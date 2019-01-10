@@ -98,6 +98,45 @@ pub enum StdPluginType {
     MixerPlugin
 }
 
+impl ClassInHierarchy for StdPluginType {
+    type SuperclassesIter = vec::IntoIter<StdPluginType>;
+
+    fn direct_superclasses(&self) -> Self::SuperclassesIter {
+        use self::StdPluginType::*;
+        match self {
+            Plugin => vec![].into_iter(),
+            ReverbPlugin => vec![Plugin, DelayPlugin, SimulatorPlugin].into_iter(),
+            WaveshaperPlugin => vec![DistortionPlugin].into_iter(),
+            AmplifierPlugin => vec![DynamicsPlugin].into_iter(),
+            CompressorPlugin => vec![DynamicsPlugin].into_iter(),
+            EnvelopePlugin => vec![DynamicsPlugin].into_iter(),
+            ExpanderPlugin => vec![DynamicsPlugin].into_iter(),
+            GatePlugin => vec![DynamicsPlugin].into_iter(),
+            LimiterPlugin => vec![DynamicsPlugin].into_iter(),
+            AllpassPlugin => vec![FilterPlugin].into_iter(),
+            BandpassPlugin => vec![FilterPlugin].into_iter(),
+            CombPlugin => vec![FilterPlugin].into_iter(),
+            EQPlugin => vec![FilterPlugin].into_iter(),
+            MultiEQPlugin => vec![EQPlugin].into_iter(),
+            ParaEQPlugin => vec![EQPlugin].into_iter(),
+            HighpassPlugin => vec![FilterPlugin].into_iter(),
+            LowpassPlugin => vec![FilterPlugin].into_iter(),
+            ConstantPlugin => vec![GeneratorPlugin].into_iter(),
+            InstrumentPlugin => vec![GeneratorPlugin].into_iter(),
+            OscillatorPlugin => vec![GeneratorPlugin].into_iter(),
+            ChorusPlugin => vec![ModulatorPlugin].into_iter(),
+            FlangerPlugin => vec![ModulatorPlugin].into_iter(),
+            PhaserPlugin => vec![ModulatorPlugin].into_iter(),
+            PitchPlugin => vec![SpectralPlugin].into_iter(),
+            AnalyserPlugin => vec![UtilityPlugin].into_iter(),
+            ConverterPlugin => vec![UtilityPlugin].into_iter(),
+            FunctionPlugin => vec![UtilityPlugin].into_iter(),
+            MixerPlugin => vec![UtilityPlugin].into_iter(),
+            _ => vec![Plugin].into_iter()
+        }
+    }
+}
+
 /// Identifiers for standard LV2 atom classes. Non-standard atom classes can exist but are not
 /// represented by this type.
 ///
@@ -240,41 +279,14 @@ pub enum StdAtomType {
     MidiProgramChange
 }
 
-impl ClassInHierarchy for StdPluginType {
-    type SuperclassesIter = vec::IntoIter<StdPluginType>;
-
-    fn direct_superclasses(&self) -> Self::SuperclassesIter {
-        use self::StdPluginType::*;
+impl StdAtomType {
+    /// Checks if this atom type expects an associated 'element' atom type to be designated. A value
+    /// of `true` is typically used for atom types that represent a collection of homogeneous
+    /// elements.
+    pub fn expects_element_type(&self) -> bool {
         match self {
-            Plugin => vec![].into_iter(),
-            ReverbPlugin => vec![Plugin, DelayPlugin, SimulatorPlugin].into_iter(),
-            WaveshaperPlugin => vec![DistortionPlugin].into_iter(),
-            AmplifierPlugin => vec![DynamicsPlugin].into_iter(),
-            CompressorPlugin => vec![DynamicsPlugin].into_iter(),
-            EnvelopePlugin => vec![DynamicsPlugin].into_iter(),
-            ExpanderPlugin => vec![DynamicsPlugin].into_iter(),
-            GatePlugin => vec![DynamicsPlugin].into_iter(),
-            LimiterPlugin => vec![DynamicsPlugin].into_iter(),
-            AllpassPlugin => vec![FilterPlugin].into_iter(),
-            BandpassPlugin => vec![FilterPlugin].into_iter(),
-            CombPlugin => vec![FilterPlugin].into_iter(),
-            EQPlugin => vec![FilterPlugin].into_iter(),
-            MultiEQPlugin => vec![EQPlugin].into_iter(),
-            ParaEQPlugin => vec![EQPlugin].into_iter(),
-            HighpassPlugin => vec![FilterPlugin].into_iter(),
-            LowpassPlugin => vec![FilterPlugin].into_iter(),
-            ConstantPlugin => vec![GeneratorPlugin].into_iter(),
-            InstrumentPlugin => vec![GeneratorPlugin].into_iter(),
-            OscillatorPlugin => vec![GeneratorPlugin].into_iter(),
-            ChorusPlugin => vec![ModulatorPlugin].into_iter(),
-            FlangerPlugin => vec![ModulatorPlugin].into_iter(),
-            PhaserPlugin => vec![ModulatorPlugin].into_iter(),
-            PitchPlugin => vec![SpectralPlugin].into_iter(),
-            AnalyserPlugin => vec![UtilityPlugin].into_iter(),
-            ConverterPlugin => vec![UtilityPlugin].into_iter(),
-            FunctionPlugin => vec![UtilityPlugin].into_iter(),
-            MixerPlugin => vec![UtilityPlugin].into_iter(),
-            _ => vec![Plugin].into_iter()
+            StdAtomType::Sequence | StdAtomType::Vector => true,
+            _ => false
         }
     }
 }
