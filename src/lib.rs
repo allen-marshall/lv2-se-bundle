@@ -6,6 +6,9 @@
 //! extensions may not be well-supported. This is mostly due to the extremely extensible nature of
 //! LV2, which makes it difficult to model all possible extensions in a data structure while keeping
 //! that data structure easy to process. This library *does* attempt to cover all commonly used,
-//! non-deprecated features of LV2, including the [standard extensions](http://lv2plug.in/ns/).
+//! non-deprecated features of standard LV2, including the
+//! [standard extensions](http://lv2plug.in/ns/). If you need plugin information beyond that, you
+//! may need to get it directly from the RDF data.
 
+pub mod rdf_util;
 pub mod bundle_model;
