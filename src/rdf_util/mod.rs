@@ -157,4 +157,40 @@ impl Literal {
             })
         }
     }
+
+    /// Gets the literal value text.
+    pub fn value(&self) -> &str {
+        &self.value
+    }
+
+    /// Gets the data type IRI.
+    pub fn data_type(&self) -> &Iri {
+        &self.data_type
+    }
+
+    /// Gets the language tag, or [`None`](std::option::Option::None) if there is no language tag.
+    pub fn lang_tag(&self) -> Option<&LangTag> {
+        match &self.lang_tag {
+            None => None,
+            Some(tag) => Some(&tag)
+        }
+    }
+}
+
+/// Represents information from an RDF graph node whose semantic meaning is unknown to the
+/// lv2-bundle library, but which is potentially relevant.
+///
+/// Note: This type's implementations of [`Ord`](std::cmp::Ord) and
+/// [`PartialOrd`](std::cmp::PartialOrd) have little semantic meaning, and exist mainly for use with
+/// collections that require an ordered element type.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum UnknownNodeInfo {
+    /// Indicates that the node is an IRI node with the specified IRI.
+    Iri(Iri),
+
+    /// Indicates that the node is a literal node with the specified value.
+    Literal(Literal),
+
+    /// Indicates that the node is a blank node. Information about the blank node's ID is not kept.
+    BlankNode
 }
