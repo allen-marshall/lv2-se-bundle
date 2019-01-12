@@ -194,3 +194,22 @@ pub enum UnknownNodeInfo {
     /// Indicates that the node is a blank node. Information about the blank node's ID is not kept.
     BlankNode
 }
+
+/// Represents RDF data that may be either understood by this crate (known) or not (unknown).
+///
+/// Note: This type's implementations of [`Ord`](std::cmp::Ord) and
+/// [`PartialOrd`](std::cmp::PartialOrd) have little semantic meaning, and exist mainly for use with
+/// collections that require an ordered element type.
+///
+/// # Parameters
+/// - `T`: Represents the known information that the RDF data might contain. Typically an `enum`
+///   representing a set of IRIs that are part of the LV2 standard.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum KnownOrUnknown<T> {
+    /// Indicates that the RDF data was understood. Contains the representation of the known data.
+    Known(T),
+
+    /// Indicates that the RDF data was not understood, possibly due to encountering an IRI from a
+    /// non-standard LV2 extension. Contains information about the RDF node that was not understood.
+    Unknown(UnknownNodeInfo)
+}
