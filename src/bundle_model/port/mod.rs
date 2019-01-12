@@ -17,7 +17,7 @@ pub struct AtomBufferType {
 
     /// Set of element types accepted by the atom buffer. This is used for homogeneous collection
     /// atom types like Vector.
-    element_types: BTreeSet<KnownOrUnknown<AtomBufferType>>
+    element_types: BTreeSet<AtomBufferType>
 }
 
 /// Identifiers for standard port buffer types understood by this crate.
