@@ -6,8 +6,6 @@ use std::fmt::{Display, Formatter};
 
 use language_tags;
 
-use sophia::term::iri_rfc3987::is_valid_iri;
-
 /// Error type returned when trying to parse an invalid IRI.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct InvalidIriError {
