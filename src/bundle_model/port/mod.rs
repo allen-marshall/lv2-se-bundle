@@ -4,6 +4,8 @@ use std::collections::BTreeSet;
 
 use enumset::EnumSet;
 
+use num_bigint::BigUint;
+
 use ordered_float::OrderedFloat;
 
 use crate::rdf_util::Literal;
@@ -295,8 +297,7 @@ pub struct Port {
 
     /// Display priority for the port, to be used when not all ports can be shown in the UI. Higher
     /// values mean more priority.
-    // TODO: Change this to a big unsigned int instead of a literal.
-    display_priority: Option<Literal>,
+    display_priority: Option<BigUint>,
 
     /// Maximum useful value for the port.
     max_value: Option<Literal>,
@@ -315,8 +316,7 @@ pub struct Port {
 
     /// Number of evenly spaced steps to use (between the maximum and minimum values) when editing
     /// the port value through a stepwise interface, such as arrow keys on the keyboard.
-    // TODO: Change this to a big unsigned int instead of a literal.
-    num_range_steps: Option<Literal>,
+    num_range_steps: Option<BigUint>,
 
     /// Buffer types to which this port can be morphed by the host. An empty set means the host
     /// cannot change the buffer type.
