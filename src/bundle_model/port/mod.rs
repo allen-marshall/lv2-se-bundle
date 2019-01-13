@@ -323,5 +323,5 @@ pub struct Port {
     host_morph_types: BTreeSet<PortBufferType>,
 
     /// Buffer types supported by this port, before any morphing occurs.
-    buffer_types: BTreeSet<PortBufferType>,
+    buffer_types: BTreeSet<PortBufferType>
 }
