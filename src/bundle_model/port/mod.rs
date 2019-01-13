@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use crate::rdf_util::KnownOrUnknown;
+use crate::rdf_util::{Literal, UnknownNodeInfo, KnownOrUnknown};
 use crate::bundle_model::subclasses::StdAtomType;
 
 /// Represents the buffer types that an LV2 atom port can accept.
@@ -42,6 +42,12 @@ pub enum StdPortBufferType {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
+pub struct ScalePoint {
+    labels: BTreeSet<Literal>,
+    value: f32
+}
+
 /// Representation of an LV2 port.
 ///
 /// Note: This type's implementations of [`Ord`](std::cmp::Ord) and
@@ -57,13 +63,71 @@ pub struct Port {
     /// both, or neither.
     is_output_port: bool,
 
+    is_connection_optional: bool,
+
+    is_enumeration: bool,
+
+    is_integer_only: bool,
+
+    is_side_chain: bool,
+
+    reports_latency: bool,
+
+    are_bounds_relative_to_sample_rate: bool,
+
+    is_toggle: bool,
+
+    causes_artifacts: bool,
+
+    is_continuous_cv: bool,
+
+    is_discrete_cv: bool,
+
+    is_change_expensive: bool,
+
+    has_strict_bounds: bool,
+
+    is_logarithmic: bool,
+
+    is_not_automatic: bool,
+
+    is_not_on_gui: bool,
+
+    is_trigger: bool,
+
     /// Indicates whether the plugin can change the buffer type of this port.
     is_auto_morphable: bool,
+
+    // TODO: Designation.
+
+    index: Option<u32>,
+
+    symbol: Option<String>,
+
+    names: BTreeSet<Literal>,
+
+    short_names: BTreeSet<Literal>,
+
+    max_value: Option<Literal>,
+
+    min_value: Option<Literal>,
+
+    default_value: Option<Literal>,
+
+    scale_points: BTreeSet<ScalePoint>,
+
+    display_priority: Option<Literal>,
+
+    range_steps: Option<Literal>,
+
+    unknown_props: BTreeSet<UnknownNodeInfo>,
 
     /// Buffer types to which this port can be morphed by the host. An empty set means the host
     /// cannot change the buffer type.
     host_morph_types: BTreeSet<KnownOrUnknown<StdPortBufferType>>,
 
     /// Buffer types supported by this port, before any morphing occurs.
-    buffer_types: BTreeSet<KnownOrUnknown<StdPortBufferType>>
+    buffer_types: BTreeSet<KnownOrUnknown<StdPortBufferType>>,
+
+    unit: Option<Unit>
 }
