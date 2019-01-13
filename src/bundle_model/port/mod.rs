@@ -60,6 +60,42 @@ pub struct ScalePoint {
 }
 
 enum_set_type! {
+    /// Enumeration of measurement units defined by the LV2 standard.
+    // TODO: Maybe move this to a different module?
+    pub enum StdUnit {
+        Bar,
+        Beat,
+
+        /// Beats per minute.
+        Bpm,
+
+        Cent,
+        Centimeter,
+        Coefficient,
+        Decibel,
+        Degree,
+        AudioFrame,
+        Hertz,
+        Inch,
+        Kilohertz,
+        Kilometer,
+        Meter,
+        Megahertz,
+        MidiNote,
+        Mile,
+        Minute,
+        Millimeter,
+        Millisecond,
+        Octave,
+        Percent,
+        Second,
+
+        /// Semitone using 12-tone equal temperament.
+        Semitone12Tet
+    }
+}
+
+enum_set_type! {
     /// Enumeration of boolean properties a port can have. Several, but not all, of these flags
     /// correspond to instances of the `lv2:PortProperty` RDF class from the LV2 standard.
     ///
@@ -271,6 +307,9 @@ pub struct Port {
     /// Default value for the port.
     default_value: Option<Literal>,
 
+    /// Identifies the units for the port value.
+    unit: Option<StdUnit>,
+
     /// Set of the port's scale points, i.e. marked values that are special in some way.
     scale_points: BTreeSet<ScalePoint>,
 
@@ -285,6 +324,4 @@ pub struct Port {
 
     /// Buffer types supported by this port, before any morphing occurs.
     buffer_types: BTreeSet<PortBufferType>,
-
-//    unit: Option<Unit>
 }
