@@ -10,5 +10,8 @@
 //! [standard extensions](http://lv2plug.in/ns/). If you need plugin information beyond that, you
 //! may need to get it directly from the RDF data.
 
+#[macro_use]
+extern crate enumset;
+
 pub mod rdf_util;
 pub mod bundle_model;
