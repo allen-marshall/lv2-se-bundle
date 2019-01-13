@@ -62,6 +62,7 @@ pub struct ScalePoint {
 enum_set_type! {
     /// Enumeration of boolean properties a port can have. Several, but not all, of these flags
     /// correspond to instances of the `lv2:PortProperty` RDF class from the LV2 standard.
+    ///
     /// Note: This type's implementations of [`Ord`](std::cmp::Ord) and
     /// [`PartialOrd`](std::cmp::PartialOrd) have little semantic meaning, and exist mainly for use
     /// with collections that require an ordered element type.
@@ -128,7 +129,107 @@ enum_set_type! {
 
         /// Indicates that the port may automatically change its port type whenever a port on the
         /// same plugin instance is morphed by the host.
-        AutoMorphable
+        AutoMorphable,
+
+        /// Designates the port as a main control channel. Typically used for a MIDI channel that
+        /// controls an instrument plugin.
+        ControlChannel,
+
+        /// Designates the port as a center channel.
+        CenterChannel,
+
+        /// Designates the port as a center left channel.
+        CenterLeftChannel,
+
+        /// Designates the port as a center right channel.
+        CenterRightChannel,
+
+        /// Designates the port as a left channel.
+        LeftChannel,
+
+        /// Designates the port as a low-frequency effects channel.
+        LowFrequencyEffectsChannel,
+
+        /// Designates the port as a rear center channel.
+        RearCenterChannel,
+
+        /// Designates the port as a rear left channel.
+        RearLeftChannel,
+
+        /// Designates the port as a rear right channel.
+        RearRightChannel,
+
+        /// Designates the port as a right channel.
+        RightChannel,
+
+        /// Designates the port as a side channel.
+        SideChannel,
+
+        /// Designates the port as a side left channel.
+        SideLeftChannel,
+
+        /// Designates the port as a side right channel.
+        SideRightChannel,
+
+        /// Designates the port as representing an amplitude.
+        AmplitudeDesignation,
+
+        /// Designates the port as representing an envelope's attack duration.
+        AttackDesignation,
+
+        /// Designates the port as a boolean bypass channel. A value of true means bypassed.
+        BypassDesignation,
+
+        /// Designates the port as representing a cutoff frequency.
+        CutoffFrequencyDesignation,
+
+        /// Designates the port as representing an envelope's decay duration.
+        DecayDesignation,
+
+        /// Designates the port as representing an envelope's delay duration.
+        DelayDesignation,
+
+        /// Designates the port as representing a dry level for a signal.
+        DryLevelDesignation,
+
+        /// Designates the port as representing a frequency.
+        FrequencyDesignation,
+
+        /// Designates the port as representing a gain in decibels.
+        GainDesignation,
+
+        /// Designates the port as representing an envelope's hold duration.
+        HoldDesignation,
+
+        /// Designates the port as representing a rectangular wave's pulse width.
+        PulseWidthDesignation,
+
+        /// Designates the port as representing a compression ratio.
+        CompressionRatioDesignation,
+
+        /// Designates the port as representing an envelope's release duration.
+        ReleaseDesignation,
+
+        /// Designates the port as representing a filter resonance.
+        ResonanceDesignation,
+
+        /// Designates the port as representing a sample rate in Hertz.
+        SampleRateDesignation,
+
+        /// Designates the port as representing an envelope's sustain level.
+        SustainDesignation,
+
+        /// Designates the port as representing a compression threshold.
+        CompressionThresholdDesignation,
+
+        /// Designates the port as representing a waveform.
+        WaveformDesignation,
+
+        /// Designates the port as representing a wet/dry ratio.
+        WetDryRatioDesignation,
+
+        /// Designates the port as representing a wet level for a signal.
+        WetLevelDesignation
     }
 }
 
@@ -141,8 +242,6 @@ enum_set_type! {
 pub struct Port {
     /// Boolean properties.
     flags: EnumSet<PortFlags>,
-
-    // TODO: Designation.
 
     index: Option<u32>,
 
