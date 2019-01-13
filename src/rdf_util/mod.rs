@@ -29,19 +29,15 @@ pub struct InvalidLangTagError {
 /// different if their text is different.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Iri {
-    /// Constructor(s) should guarantee this is a valid IRI.
+    // TODO: Constructor(s) should guarantee this is a valid IRI. They currently do not.
     iri: String
 }
 
 impl Iri {
-    /// Constructs an IRI from the given string. Returns an error if the string is not a valid IRI.
+    /// Constructs an IRI from the given string. Currently, this function never returns an error,
+    /// but future versions will hopefully reject invalid IRI strings.
     pub fn new(iri: String) -> Result<Self, InvalidIriError> {
-        if !is_valid_iri(&iri) {
-            Err(InvalidIriError { attempted_iri: iri })
-        }
-        else {
-            Ok(Iri { iri })
-        }
+        Ok(Iri { iri })
     }
 }
 
