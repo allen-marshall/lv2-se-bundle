@@ -52,7 +52,7 @@ pub enum PortBufferType {
 /// Represents a 'scale point', i.e. a special marked value for a control port.
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct ScalePoint {
-    /// Zero or more labels to be displayed in association with the scale point.
+    /// Labels to be displayed in association with the scale point.
     labels: BTreeSet<Literal>,
 
     /// Control port value for the scale point.
@@ -243,25 +243,41 @@ pub struct Port {
     /// Boolean properties.
     flags: EnumSet<PortFlags>,
 
+    /// Index of the port.
     index: Option<u32>,
 
+    /// Symbol identifying the port.
     symbol: Option<String>,
 
+    /// Labels to be displayed in association with the port. Unlike the
+    /// [`symbol`](self::Port::symbol), these labels do not act as identifiers.
     names: BTreeSet<Literal>,
 
+    /// Short labels (no more than 16 characters) to be displayed in association with the port.
+    /// Unlike the [`symbol`](self::Port::symbol), these labels do not act as identifiers.
     short_names: BTreeSet<Literal>,
 
-    max_value: Option<Literal>,
-
-    min_value: Option<Literal>,
-
-    default_value: Option<Literal>,
-
-    scale_points: BTreeSet<ScalePoint>,
-
+    /// Display priority for the port, to be used when not all ports can be shown in the UI. Higher
+    /// values mean more priority.
+    // TODO: Change this to a big unsigned int instead of a literal.
     display_priority: Option<Literal>,
 
-    range_steps: Option<Literal>,
+    /// Maximum useful value for the port.
+    max_value: Option<Literal>,
+
+    /// Minimum useful value for the port.
+    min_value: Option<Literal>,
+
+    /// Default value for the port.
+    default_value: Option<Literal>,
+
+    /// Set of the port's scale points, i.e. marked values that are special in some way.
+    scale_points: BTreeSet<ScalePoint>,
+
+    /// Number of evenly spaced steps to use (between the maximum and minimum values) when editing
+    /// the port value through a stepwise interface, such as arrow keys on the keyboard.
+    // TODO: Change this to a big unsigned int instead of a literal.
+    num_range_steps: Option<Literal>,
 
     /// Buffer types to which this port can be morphed by the host. An empty set means the host
     /// cannot change the buffer type.
