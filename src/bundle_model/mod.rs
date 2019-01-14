@@ -2,3 +2,4 @@
 
 pub mod subclasses;
 pub mod port;
+pub mod plugin;
