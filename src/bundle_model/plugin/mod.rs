@@ -1,4 +1,4 @@
-/// Representation of LV2 plugins.
+//! Representation of LV2 plugins.
 
 enum_set_type! {
     pub enum StdHostFeature {
