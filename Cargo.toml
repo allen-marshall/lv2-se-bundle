@@ -15,7 +15,7 @@ publish = false
 [badges]
 # TODO: Uncomment badges.
 # travis-ci = { repository = "https://github.com/allen-marshall/lv2-se-bundle" }
-# coveralls = { repository = "https://github.com/allen-marshall/lv2-se-bundle", service = "github" }
+# codecov = { repository = "https://github.com/allen-marshall/lv2-se-bundle", service = "github" }
 # is-it-maintained-issue-resolution = { repository = "https://github.com/allen-marshall/lv2-se-bundle" }
 # is-it-maintained-open-issues = { repository = "https://github.com/allen-marshall/lv2-se-bundle" }
 maintenance = { status = "experimental" }
