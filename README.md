@@ -1,6 +1,7 @@
 # lv2-se-bundle
 
 [![Build Status](https://travis-ci.org/allen-marshall/lv2-se-bundle.svg?branch=master)](https://travis-ci.org/allen-marshall/lv2-se-bundle)
+[![codecov](https://codecov.io/gh/allen-marshall/lv2-se-bundle/branch/master/graph/badge.svg)](https://codecov.io/gh/allen-marshall/lv2-se-bundle)
 ![Last Commit](https://img.shields.io/github/last-commit/allen-marshall/lv2-se-bundle.svg)
 ![License](https://img.shields.io/github/license/allen-marshall/lv2-se-bundle.svg)
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/allen-marshall/lv2-se-bundle.svg)](http://isitmaintained.com/project/allen-marshall/lv2-se-bundle "Average time to resolve an issue")
