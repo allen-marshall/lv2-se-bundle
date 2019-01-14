@@ -23,7 +23,7 @@ version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "lv2-bundle"
+name = "lv2-se-bundle"
 version = "0.1.0"
 dependencies = [
  "enumset 0.3.15 (registry+https://github.com/rust-lang/crates.io-index)",
