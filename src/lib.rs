@@ -16,3 +16,13 @@ extern crate enumset;
 
 pub mod rdf_util;
 pub mod bundle_model;
+
+// TODO: Remove this once actual tests are implemented. It exists mainly to test whether Codecov
+// integration is working.
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn basic_test() {
+        assert_eq!(1i32, 1i32);
+    }
+}
