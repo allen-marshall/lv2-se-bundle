@@ -9,6 +9,9 @@ categories = ["parser-implementations"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/allen-marshall/lv2-se-bundle"
 
+# TODO: Remove 'publish = false' when ready to publish this crate.
+publish = false
+
 [badges]
 # TODO: Uncomment badges.
 # travis-ci = { repository = "https://github.com/allen-marshall/lv2-se-bundle" }
