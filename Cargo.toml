@@ -10,10 +10,11 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/allen-marshall/lv2-se-bundle"
 
 [badges]
-travis-ci = { repository = "allen-marshall/lv2-se-bundle" }
-coveralls = { repository = "allen-marshall/lv2-se-bundle", service = "github" }
-is-it-maintained-issue-resolution = { repository = "allen-marshall/lv2-se-bundle" }
-is-it-maintained-open-issues = { repository = "allen-marshall/lv2-se-bundle" }
+# TODO: Uncomment badges.
+# travis-ci = { repository = "https://github.com/allen-marshall/lv2-se-bundle" }
+# coveralls = { repository = "https://github.com/allen-marshall/lv2-se-bundle", service = "github" }
+# is-it-maintained-issue-resolution = { repository = "https://github.com/allen-marshall/lv2-se-bundle" }
+# is-it-maintained-open-issues = { repository = "https://github.com/allen-marshall/lv2-se-bundle" }
 maintenance = { status = "experimental" }
 
 [dependencies]
