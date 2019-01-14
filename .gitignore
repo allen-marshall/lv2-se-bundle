@@ -1,5 +1,4 @@
 /target
-/doc
 **/*.rs.bk
 .idea
 *.iml
