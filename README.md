@@ -1,5 +1,7 @@
 # lv2-se-bundle
 
+[![Build Status](https://travis-ci.org/allen-marshall/lv2-se-bundle.svg?branch=master)](https://travis-ci.org/allen-marshall/lv2-se-bundle)
+
 A library for reading/writing [LV2](http://lv2plug.in) bundle RDF data to/from data structures that can be more easily
 processed by Rust code. The 'se' stands for *safety* and *ease of use*, which are two of this project's main priorities.
 
