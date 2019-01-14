@@ -397,7 +397,7 @@ enum_set_type! {
         /// Indicates that the port's only valid values are integers.
         IntOnly,
 
-        /// Indicates that the port is a `sidechain` rather than a main port. Hosts are not required
+        /// Indicates that the port is a 'sidechain' rather than a main port. Hosts are not required
         /// to connect anything to a sidechain port, not even a null pointer.
         SideChain,
 
