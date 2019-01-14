@@ -1,6 +1,7 @@
 # lv2-se-bundle
 
 [![Build Status](https://travis-ci.org/allen-marshall/lv2-se-bundle.svg?branch=master)](https://travis-ci.org/allen-marshall/lv2-se-bundle)
+![](https://img.shields.io/github/last-commit/allen-marshall/lv2-se-bundle.svg)
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/allen-marshall/lv2-se-bundle.svg)](http://isitmaintained.com/project/allen-marshall/lv2-se-bundle "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/allen-marshall/lv2-se-bundle.svg)](http://isitmaintained.com/project/allen-marshall/lv2-se-bundle "Percentage of issues still open")
 
