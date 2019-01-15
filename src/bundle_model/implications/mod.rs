@@ -12,7 +12,7 @@ use crate::bundle_model::constants::{PluginType, PortDesignation, Unit};
 /// belonging to the plugin types in a set `x`, it must also belong to all plugin types in the set
 /// `plug_types_implied_by_plug_types(x)`. The returned set will contain at least the same set of
 /// plugin types provided in the argument.
-pub fn plugin_types_implied_by_plugin_types(explicit_plugin_types: EnumSet<PluginType>) -> EnumSet<PluginType> {
+pub(crate) fn plugin_types_implied_by_plugin_types(explicit_plugin_types: EnumSet<PluginType>) -> EnumSet<PluginType> {
     let mut plugin_types = explicit_plugin_types;
 
     // Insert plugin type superclasses if any of their subclasses are present.
@@ -51,7 +51,7 @@ pub fn plugin_types_implied_by_plugin_types(explicit_plugin_types: EnumSet<Plugi
 /// Finds port units implied by a set of LV2 port designations. Some port designations automatically
 /// imply a unit for the port, and this function looks for such cases. The returned set is empty if
 /// none of the specified port designations imply a unit.
-pub fn units_implied_by_designations(designations: EnumSet<PortDesignation>) -> EnumSet<Unit> {
+pub(crate) fn units_implied_by_designations(designations: EnumSet<PortDesignation>) -> EnumSet<Unit> {
     if designations.contains(PortDesignation::Gain) {
         EnumSet::only(Unit::Decibel)
     }
