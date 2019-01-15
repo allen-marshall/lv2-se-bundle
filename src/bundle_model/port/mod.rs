@@ -12,10 +12,6 @@ use crate::rdf_util::Literal;
 use crate::bundle_model::constants::{AtomType, Unit, PortProperty, PortDesignation, PortChannel};
 
 /// Contains extra information associated with an LV2 atom port.
-///
-/// Note: This type's implementations of [`Ord`](std::cmp::Ord) and
-/// [`PartialOrd`](std::cmp::PartialOrd) have little semantic meaning, and exist mainly for use with
-/// collections that require an ordered element type.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct AtomPortInfo {
     /// Main atom types that the port can accept in its buffer.
@@ -24,8 +20,7 @@ pub struct AtomPortInfo {
     /// Element types accepted by the element-accepting atom types in
     /// [`main_types`](self::AtomPortInfo::main_types). Must be empty if
     /// [`expects_element_type`](crate::bundle_model::subclasses::StdAtomType::expects_element_type)
-    /// is not true for any of the atom types in
-    /// [`main_types`](self::AtomPortInfo::main_types).
+    /// is not true for any of the atom types in [`main_types`](self::AtomPortInfo::main_types).
     element_types: EnumSet<AtomType>
 }
 
@@ -64,10 +59,6 @@ pub struct ScalePoint {
 enum_set_type! {
     /// Enumeration of boolean properties a port can have. Several, but not all, of these flags
     /// correspond to instances of the `lv2:PortProperty` RDF class from the LV2 standard.
-    ///
-    /// Note: This type's implementations of [`Ord`](std::cmp::Ord) and
-    /// [`PartialOrd`](std::cmp::PartialOrd) have little semantic meaning, and exist mainly for use
-    /// with collections that require an ordered element type.
     enum PortFlags {
         /// Indicates that the port can receive input. A port can have input, output, both, or
         /// neither.
@@ -84,10 +75,6 @@ enum_set_type! {
 }
 
 /// Representation of an LV2 port.
-///
-/// Note: This type's implementations of [`Ord`](std::cmp::Ord) and
-/// [`PartialOrd`](std::cmp::PartialOrd) have little semantic meaning, and exist mainly for use with
-/// collections that require an ordered element type.
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct Port {
     /// Some boolean properties.

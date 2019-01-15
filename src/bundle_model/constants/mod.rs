@@ -211,7 +211,7 @@ enum_set_type! {
     /// Identifiers for standard LV2 atom classes. Non-standard atom classes can exist but are not
     /// represented by this type.
     ///
-    /// Note: This type's implementations of [`Ord`](std::cmp::Ord) and
+    /// This type's implementations of [`Ord`](std::cmp::Ord) and
     /// [`PartialOrd`](std::cmp::PartialOrd) have little semantic meaning, and exist mainly for use
     /// with collections that require an ordered element type. In particular, superclasses are not
     /// guaranteed to have a particular ordering relative to their subclasses.
