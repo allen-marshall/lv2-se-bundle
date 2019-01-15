@@ -10,52 +10,52 @@ enum_set_type! {
     /// [`PartialOrd`](std::cmp::PartialOrd) have little semantic meaning, and exist mainly for use
     /// with collections that require an ordered element type. In particular, superclasses are not
     /// guaranteed to have a particular ordering relative to their subclasses.
-    pub enum StdPluginType {
-        DelayPlugin,
-        ReverbPlugin,
-        DistortionPlugin,
-        WaveshaperPlugin,
-        DynamicsPlugin,
-        AmplifierPlugin,
-        CompressorPlugin,
-        EnvelopePlugin,
-        ExpanderPlugin,
-        GatePlugin,
-        LimiterPlugin,
-        FilterPlugin,
-        AllpassPlugin,
-        BandpassPlugin,
-        CombPlugin,
-        EQPlugin,
-        MultiEQPlugin,
-        ParaEQPlugin,
-        HighpassPlugin,
-        LowpassPlugin,
-        GeneratorPlugin,
-        ConstantPlugin,
-        InstrumentPlugin,
-        OscillatorPlugin,
-        ModulatorPlugin,
-        ChorusPlugin,
-        FlangerPlugin,
-        PhaserPlugin,
-        SimulatorPlugin,
-        SpatialPlugin,
-        SpectralPlugin,
-        PitchPlugin,
-        UtilityPlugin,
-        AnalyserPlugin,
-        ConverterPlugin,
-        FunctionPlugin,
-        MixerPlugin
+    pub enum PluginType {
+        Delay,
+        Reverb,
+        Distortion,
+        Waveshaper,
+        Dynamics,
+        Amplifier,
+        Compressor,
+        Envelope,
+        Expander,
+        Gate,
+        Limiter,
+        Filter,
+        Allpass,
+        Bandpass,
+        Comb,
+        EQ,
+        MultiEQ,
+        ParaEQ,
+        Highpass,
+        Lowpass,
+        Generator,
+        Constant,
+        Instrument,
+        Oscillator,
+        Modulator,
+        Chorus,
+        Flanger,
+        Phaser,
+        Simulator,
+        Spatial,
+        Spectral,
+        Pitch,
+        Utility,
+        Analyser,
+        Converter,
+        Function,
+        Mixer
     }
 }
 
 enum_set_type! {
     /// Identifiers for standard host features that can be supported and/or required by a plugin or
     /// LV2 UI. Does not include UI port protocol features; for those, see
-    /// [`StdUiPortProtocol`](self::StdUiPortProtocol).
-    pub enum StdHostFeature {
+    /// [`UiPortProtocol`](self::UiPortProtocol).
+    pub enum HostFeature {
 
         /// A plugin can support this feature to indicate that it is a 'hard real-time' plugin. Note
         /// that the LV2 standard defines some restrictions on the behavior of hard real-time
@@ -166,7 +166,7 @@ enum_set_type! {
 enum_set_type! {
     /// Identifiers for standard host features that represent LV2 port protocols used by LV2 UIs. A
     /// port protocol defines a way for the LV2 UI and plugin to communicate port values.
-    pub enum StdUiPortProtocol {
+    pub enum UiPortProtocol {
         /// Port protocol for transferring atoms.
         Atom,
 
@@ -184,7 +184,7 @@ enum_set_type! {
 
 enum_set_type! {
     /// Identifiers for standard extension interfaces that a plugin or LV2 UI can provide.
-    pub enum StdPluginExtensionData {
+    pub enum PluginExtensionData {
         /// Extension interface for dynamically setting and getting LV2 options.
         Options,
 
@@ -215,7 +215,7 @@ enum_set_type! {
     /// [`PartialOrd`](std::cmp::PartialOrd) have little semantic meaning, and exist mainly for use
     /// with collections that require an ordered element type. In particular, superclasses are not
     /// guaranteed to have a particular ordering relative to their subclasses.
-    pub enum StdAtomType {
+    pub enum AtomType {
         /// Base class for the atom class hierarchy.
         Atom,
 
@@ -249,7 +249,7 @@ enum_set_type! {
         /// atoms as values.
         Object,
 
-        /// Atom type representing a property of an [`Object`](self::StdAtomType::Object). An atom
+        /// Atom type representing a property of an [`Object`](self::AtomType::Object). An atom
         /// of this type contains a key-value pair.
         Property,
 
@@ -276,7 +276,7 @@ enum_set_type! {
         /// pre-specified type.
         Vector,
 
-        /// An atom of this type contains a list of [`Float`](self::StdAtomType::Float) atoms.
+        /// An atom of this type contains a list of [`Float`](self::AtomType::Float) atoms.
         Sound,
 
         /// An atom of this type contains a single MIDI event.
@@ -352,7 +352,7 @@ enum_set_type! {
 
 enum_set_type! {
     /// Identifiers for measurement units defined by the LV2 standard.
-    pub enum StdUnit {
+    pub enum Unit {
         Bar,
         Beat,
 
@@ -387,7 +387,7 @@ enum_set_type! {
 
 enum_set_type! {
     /// Identifiers for standard LV2 port properties that can apply to a port.
-    pub enum StdPortProperty {
+    pub enum PortProperty {
         /// Indicates that connecting the port to a non-null buffer is optional.
         ConnOptional,
 
@@ -443,9 +443,9 @@ enum_set_type! {
 }
 
 enum_set_type! {
-    /// Identifiers for standard 'designations' that can apply to a port. Does not include channel
-    /// designations; for those, see [`StdPortChannel`](self::StdPortChannel).
-    pub enum StdPortDesignation {
+    /// Identifiers for standard LV2 'designations' that can apply to a port. Does not include
+    /// channel designations; for those, see [`PortChannel`](self::PortChannel).
+    pub enum PortDesignation {
         /// Designates the port as representing an amplitude.
         Amplitude,
 
@@ -509,8 +509,8 @@ enum_set_type! {
 }
 
 enum_set_type! {
-    /// Identifiers for standard channel designations that can apply to a port.
-    pub enum StdPortChannel {
+    /// Identifiers for standard LV2 channel designations that can apply to a port.
+    pub enum PortChannel {
         /// Designates the port as a main control channel. Typically used for a MIDI channel that
         /// controls an instrument plugin.
         Control,
