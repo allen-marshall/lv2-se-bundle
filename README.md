@@ -3,9 +3,9 @@
 [![Build Status](https://travis-ci.org/allen-marshall/lv2-se-bundle.svg?branch=master)](https://travis-ci.org/allen-marshall/lv2-se-bundle)
 [![codecov](https://codecov.io/gh/allen-marshall/lv2-se-bundle/branch/master/graph/badge.svg)](https://codecov.io/gh/allen-marshall/lv2-se-bundle)
 ![Last Commit](https://img.shields.io/github/last-commit/allen-marshall/lv2-se-bundle.svg)
-![License](https://img.shields.io/github/license/allen-marshall/lv2-se-bundle.svg)
 [![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/allen-marshall/lv2-se-bundle.svg)](http://isitmaintained.com/project/allen-marshall/lv2-se-bundle "Average time to resolve an issue")
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/allen-marshall/lv2-se-bundle.svg)](http://isitmaintained.com/project/allen-marshall/lv2-se-bundle "Percentage of issues still open")
+<!-- TODO: Add license badge once crate is ready to be published. -->
 
 **Warning:** This library is in early development and is not yet usable.
 
@@ -19,3 +19,7 @@ maintaining ease of use. This library *does* attempt to cover all commonly used,
 LV2, including features from the [standard extensions](http://lv2plug.in/ns/). If you need features beyond what this
 library provides, you may need to read or write the RDF bundle data directly (though feel free to request a change to
 this library).
+
+# License
+
+MIT OR Apache-2.0
