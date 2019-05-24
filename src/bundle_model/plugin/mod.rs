@@ -17,7 +17,7 @@ pub struct PluginInfo {
     iri: Iri,
 
     /// URI pointing to the shared library that implements the plugin.
-    binary: Option<Iri>,
+    binary: Iri,
 
     /// Human-readable plugin names. Multiple language-tagged literals can be used. These should be
     /// extracted from the doap:name RDF property.
@@ -73,10 +73,9 @@ impl PluginInfo {
         &self.iri
     }
 
-    /// Gets a URI pointing to the shared library that implements the plugin. Returns
-    /// [`None`](std::option::Option::None) if the bundle does not specify a binary for the plugin.
-    pub fn binary(&self) -> Option<&Iri> {
-        self.binary.as_ref()
+    /// Gets a URI pointing to the shared library that implements the plugin.
+    pub fn binary(&self) -> &Iri {
+        &self.binary
     }
 
     /// Gets an iterator over the human-readable name literals for the plugin. A plugin may have
