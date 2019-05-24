@@ -185,7 +185,7 @@ pub enum UiPortProtocol {
 
 /// Identifiers for standard extension interfaces that a plugin or LV2 UI can provide.
 #[derive(Debug, PartialOrd, Ord, Hash, EnumSetType)]
-pub enum PluginExtensionData {
+pub enum ExtensionData {
     /// Extension interface for dynamically setting and getting LV2 options.
     Options,
 

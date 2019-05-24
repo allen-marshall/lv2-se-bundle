@@ -1,12 +1,13 @@
 //! Representation of LV2 plugins.
 
 use std::collections::BTreeSet;
+use std::collections::btree_set;
 use crate::rdf_util::{Literal, Iri};
-use enumset::EnumSet;
-use crate::bundle_model::constants::{PluginExtensionData, HostFeature};
+use enumset::{EnumSet, EnumSetIter};
+use crate::bundle_model::constants::{ExtensionData, HostFeature};
 use num_bigint::BigUint;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use crate::bundle_model::ResourceVersion;
+use crate::bundle_model::{ResourceVersion, LoadableEntity, Nameable, ExtensionDataProvider, HostFeatureSupporter};
 use crate::bundle_model::symbol::Symbol;
 use crate::bundle_model::project::ProjectInfo;
 
@@ -55,7 +56,7 @@ pub struct PluginInfo {
     optional_host_features: EnumSet<HostFeature>,
 
     /// Types of extension data provided by the plugin in `LV2_Descriptor::instantiate()`.
-    extension_data: EnumSet<PluginExtensionData>,
+    extension_data: EnumSet<ExtensionData>,
 
     /// Flag indicating whether the plugin is enabled or bypassed. Most bundles probably won't
     /// specify this, as its value seems to only make sense at runtime.
@@ -68,21 +69,9 @@ pub struct PluginInfo {
 }
 
 impl PluginInfo {
-    /// Gets the IRI that identifies the plugin.
-    pub fn iri(&self) -> &Iri {
-        &self.iri
-    }
-
-    /// Gets a URI pointing to the shared library that implements the plugin. If the URI is
-    /// relative, it should be interpreted relative to the bundle path.
-    pub fn binary(&self) -> &Iri {
-        &self.binary
-    }
-
-    /// Gets an iterator over the human-readable name literals for the plugin. A plugin may have
-    /// multiple language-tagged name literals to provide multilingual naming.
-    pub fn names(&self) -> impl ParallelIterator<Item = &Literal> {
-        self.names.par_iter()
+    /// Gets the plugin version specified in the bundle.
+    pub fn version(&self) -> &ResourceVersion {
+        &self.version
     }
 
     /// Gets an iterator over the plugin's documentation literals. A plugin may have multiple
@@ -99,89 +88,11 @@ impl PluginInfo {
         self.project.as_ref()
     }
 
-    /// Gets an iterator over the short name literals for the plugin. A plugin may have multiple
-    /// language-tagged short name literals (up to 16 characters each) to provide multilingual
-    /// naming.
-    pub fn short_names(&self) -> impl ParallelIterator<Item = &Literal> {
-        self.short_names.par_iter()
-    }
-
-    /// Gets the LV2 symbol identifying the plugin. While this can be useful for plugin search
-    /// functionality in a host UI, the usual way of identifying a plugin is by its IRI. Returns
-    /// [`None`](std::option::Option::None) if the bundle does not specify a symbol for the plugin.
-    pub fn symbol(&self) -> Option<&Symbol> {
-        self.symbol.as_ref()
-    }
-
-    /// Gets the plugin version specified in the bundle.
-    pub fn version(&self) -> &ResourceVersion {
-        &self.version
-    }
-
     /// Gets the number of latency frames introduced by the plugin. Returns
     /// [`None`](std::option::Option::None) if the bundle does not specify a latency amount for the
     /// plugin.
     pub fn latency(&self) -> Option<&BigUint> {
         self.latency.as_ref()
-    }
-
-    /// Gets an iterator over the host features required by the plugin. The iterator will not repeat
-    /// items.
-    pub fn required_host_features(&self) -> impl Iterator<Item = HostFeature> {
-        self.required_host_features.iter()
-    }
-
-    /// Checks if the specified host feature is required by the plugin.
-    ///
-    /// # Parameters
-    /// - `host_feature`: The host feature to check for.
-    pub fn requires_host_featue(&self, host_feature: HostFeature) -> bool {
-        self.required_host_features.contains(host_feature)
-    }
-
-    /// Gets an iterator over the host features that are supported but not required by the plugin.
-    /// The iterator will not repeat items.
-    pub fn optional_host_features(&self) -> impl Iterator<Item = HostFeature> {
-        self.optional_host_features.iter()
-    }
-
-    /// Checks if the specified host feature is optionally supported by the plugin.
-    ///
-    /// # Parameters
-    /// - `host_feature`: The host feature to check for.
-    pub fn optionally_supports_host_feature(&self, host_feature: HostFeature) -> bool {
-        self.optional_host_features.contains(host_feature)
-    }
-
-    /// Gets an iterator over the host features that are supported by the plugin, as either required
-    /// features or optional features. The iterator will not repeat items.
-    pub fn supported_host_features(&self) -> impl Iterator<Item = HostFeature> {
-        (self.required_host_features | self.optional_host_features).iter()
-    }
-
-    /// Checks if the specified host feature is supported by the plugin, as either a required
-    /// feature or an optional feature.
-    ///
-    /// # Parameters
-    /// - `host_feature`: The host feature to check for.
-    pub fn supports_host_feature(&self, host_feature: HostFeature) -> bool {
-        self.requires_host_featue(host_feature)
-            || self.optionally_supports_host_feature(host_feature)
-    }
-
-    /// Gets an iterator over the types of extension data provided by the plugin via
-    /// `LV2_Descriptor::instantiate()`. The iterator will not repeat items.
-    pub fn extension_data(&self) -> impl Iterator<Item = PluginExtensionData> {
-        self.extension_data.iter()
-    }
-
-    /// Checks if the plugin provides the specified type of extension data via
-    /// `LV2_Descriptor::instantiate()`.
-    ///
-    /// # Parameters
-    /// - `extension_data`: The type of extension data to check for.
-    pub fn has_extension_data(&self, extension_data: PluginExtensionData) -> bool {
-        self.extension_data.contains(extension_data)
     }
 
     /// Gets a boolean indicating whether the plugin is enabled (true) or bypassed (false). Returns
@@ -198,5 +109,54 @@ impl PluginInfo {
     /// value seems to only make sense at runtime.
     pub fn free_wheeling(&self) -> Option<bool> {
         self.free_wheeling
+    }
+}
+
+impl LoadableEntity for PluginInfo {
+    fn iri(&self) -> Option<&Iri> {
+        Some(&self.iri)
+    }
+
+    fn binary(&self) -> Option<&Iri> {
+        Some(&self.binary)
+    }
+
+    fn symbol(&self) -> Option<&Symbol> {
+        self.symbol.as_ref()
+    }
+}
+
+impl<'a> Nameable<'a> for PluginInfo {
+    type NamesIter = btree_set::Iter<'a, Literal>;
+    type ShortNamesIter = btree_set::Iter<'a, Literal>;
+
+    fn names_iter(&'a self) -> Self::NamesIter {
+        self.names.iter()
+    }
+
+    fn short_names_iter(&'a self) -> Self::ShortNamesIter {
+        self.short_names.iter()
+    }
+}
+
+impl ExtensionDataProvider for PluginInfo {
+    type ExtensionDataIter = EnumSetIter<ExtensionData>;
+
+    fn extension_data_iter(&self) -> Self::ExtensionDataIter {
+        self.extension_data.iter()
+    }
+}
+
+impl HostFeatureSupporter for PluginInfo {
+    type RequiredHostFeaturesIter = EnumSetIter<HostFeature>;
+
+    type OptionalHostFeaturesIter = EnumSetIter<HostFeature>;
+
+    fn required_host_features_iter(&self) -> Self::RequiredHostFeaturesIter {
+        self.required_host_features.iter()
+    }
+
+    fn optional_host_features_iter(&self) -> Self::OptionalHostFeaturesIter {
+        self.optional_host_features.iter()
     }
 }
