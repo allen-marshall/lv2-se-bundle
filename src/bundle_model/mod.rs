@@ -7,6 +7,7 @@ pub mod symbol;
 pub mod project;
 pub mod port;
 pub mod plugin;
+pub mod dyn_manifest;
 
 /// Represents a version specification for an LV2 resource, such as a plugin. A resource version
 /// consists of a minor version number and a micro version number. There is no major version number,
