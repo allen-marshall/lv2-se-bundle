@@ -157,7 +157,12 @@ pub enum HostFeature {
 
     /// Indicates that the host provides work scheduling for tasks that need to be executed
     /// outside the audio thread.
-    WorkSchedule
+    WorkSchedule,
+
+    /// Indicates that the host provides a direct handle to a plugin instance. Typically, this would
+    /// be used by plugin UIs rather than plugins. The LV2 specification states that use of this
+    /// feature is highly discouraged, but it is not deprecated at the time of this writing.
+    InstanceAccess
 }
 
 /// Identifiers for standard host features that represent LV2 port protocols used by LV2 UIs. A
