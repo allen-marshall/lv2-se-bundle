@@ -73,7 +73,8 @@ impl PluginInfo {
         &self.iri
     }
 
-    /// Gets a URI pointing to the shared library that implements the plugin.
+    /// Gets a URI pointing to the shared library that implements the plugin. If the URI is
+    /// relative, it should be interpreted relative to the bundle path.
     pub fn binary(&self) -> &Iri {
         &self.binary
     }
