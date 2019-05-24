@@ -7,6 +7,7 @@ use crate::bundle_model::constants::{PluginExtensionData, HostFeature};
 use num_bigint::BigUint;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use crate::bundle_model::ResourceVersion;
+use crate::bundle_model::symbol::Symbol;
 
 /// Representation of an LV2 plugin.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -31,7 +32,8 @@ pub struct PluginInfo {
     /// Short name for the plugin, up to 16 characters.
     short_name: Option<String>,
 
-    // TODO: Add symbol field.
+    /// LV2 symbol identifying the plugin.
+    symbol: Option<Symbol>,
 
     /// Plugin version.
     version: ResourceVersion,
@@ -93,6 +95,13 @@ impl PluginInfo {
     /// plugin.
     pub fn short_name(&self) -> Option<&String> {
         self.short_name.as_ref()
+    }
+
+    /// Gets the LV2 symbol identifying the plugin. While this can be useful for plugin search
+    /// functionality in a host UI, the usual way of identifying a plugin is by its IRI. Returns
+    /// [`None`](std::option::Option::None) if the bundle does not specify a symbol for the plugin.
+    pub fn symbol(&self) -> Option<&Symbol> {
+        self.symbol.as_ref()
     }
 
     /// Gets the plugin version specified in the bundle.
