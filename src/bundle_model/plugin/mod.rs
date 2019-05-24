@@ -8,6 +8,7 @@ use num_bigint::BigUint;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use crate::bundle_model::ResourceVersion;
 use crate::bundle_model::symbol::Symbol;
+use crate::bundle_model::project::ProjectInfo;
 
 /// Representation of an LV2 plugin.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -27,10 +28,12 @@ pub struct PluginInfo {
     /// as the content of the <body> element."
     documentation: BTreeSet<Literal>,
 
-    // TODO: Add project field.
+    /// Description of the project to which the plugin belongs, if specified.
+    project: Option<ProjectInfo>,
 
-    /// Short name for the plugin, up to 16 characters.
-    short_name: Option<String>,
+    /// Short names for the plugin, up to 16 characters each. Multiple language-tagged literals can
+    /// be used.
+    short_names: BTreeSet<Literal>,
 
     /// LV2 symbol identifying the plugin.
     symbol: Option<Symbol>,
@@ -90,11 +93,17 @@ impl PluginInfo {
         self.documentation.par_iter()
     }
 
-    /// Gets the short name for the plugin, which can be up to 16 characters. Returns
-    /// [`None`](std::option::Option::None) if the bundle does not specify a short name for the
-    /// plugin.
-    pub fn short_name(&self) -> Option<&String> {
-        self.short_name.as_ref()
+    /// Gets the project information for the plugin. Returns [`None`](std::option::Option::None) if
+    /// the bundle does not specify a project for the plugin.
+    pub fn project(&self) -> Option<&ProjectInfo> {
+        self.project.as_ref()
+    }
+
+    /// Gets an iterator over the short name literals for the plugin. A plugin may have multiple
+    /// language-tagged short name literals (up to 16 characters each) to provide multilingual
+    /// naming.
+    pub fn short_names(&self) -> impl ParallelIterator<Item = &Literal> {
+        self.short_names.par_iter()
     }
 
     /// Gets the LV2 symbol identifying the plugin. While this can be useful for plugin search

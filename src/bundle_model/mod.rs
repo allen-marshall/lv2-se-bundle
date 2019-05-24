@@ -4,6 +4,7 @@ use num_bigint::BigUint;
 
 pub mod constants;
 pub mod symbol;
+pub mod project;
 pub mod port;
 pub mod plugin;
 
