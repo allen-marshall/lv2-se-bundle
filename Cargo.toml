@@ -21,7 +21,7 @@ publish = false
 maintenance = { status = "experimental" }
 
 [dependencies]
-enumset = "0.3"
+enumset = "0.4"
 num-bigint = "0.2"
 ordered-float = "1.0"
 language-tags = "0.2"
