@@ -1,7 +1,7 @@
 //! Representation of LV2 dynamic manifest generator.
 
 use crate::rdf_util::Iri;
-use crate::bundle_model::{Loadable, Requirer, Identified};
+use crate::bundle_model::{Loadable, Requirer, OptionallyIdentifiedBy};
 use crate::bundle_model::symbol::Symbol;
 use enumset::{EnumSet, EnumSetIter};
 use crate::bundle_model::constants::HostFeature;
@@ -28,12 +28,14 @@ pub struct DynManifestInfo {
     optional_host_features: EnumSet<HostFeature>
 }
 
-impl Identified for DynManifestInfo {
-    fn iri(&self) -> Option<&Iri> {
+impl OptionallyIdentifiedBy<Iri> for DynManifestInfo {
+    fn id(&self) -> Option<&Iri> {
         self.iri.as_ref()
     }
+}
 
-    fn symbol(&self) -> Option<&Symbol> {
+impl OptionallyIdentifiedBy<Symbol> for DynManifestInfo {
+    fn id(&self) -> Option<&Symbol> {
         self.symbol.as_ref()
     }
 }

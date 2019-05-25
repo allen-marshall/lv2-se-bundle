@@ -3,7 +3,6 @@
 use num_bigint::BigUint;
 use rayon::iter::{Chain, ParallelIterator};
 use crate::rdf_util::{Iri, Literal};
-use crate::bundle_model::symbol::Symbol;
 
 pub mod constants;
 pub mod symbol;
@@ -58,15 +57,22 @@ impl ResourceVersion {
     }
 }
 
-/// Trait for types that can be identified by IRIs and/or LV2 symbols.
-pub trait Identified {
-    /// Gets the IRI that identifies the entity. Returns [`None`](std::option::Option::None) if the
-    /// LV2 bundle data does not specify an IRI for the entity.
-    fn iri(&self) -> Option<&Iri>;
+/// Trait for types that are required to have an "identifier" of the specified type.
+///
+/// # Parameters
+/// - `T`: Type of identifier.
+pub trait IdentifiedBy<T> {
+    /// Gets this object's identifier.
+    fn id(&self) -> &T;
+}
 
-    /// Gets the LV2 symbol identifying the entity. Returns [`None`](std::option::Option::None) if
-    /// the bundle does not specify a symbol for the entity.
-    fn symbol(&self) -> Option<&Symbol>;
+/// Trait for types that may, but are not required to, have an "identifier" of the specified type.
+///
+/// # Parameters
+/// - `T`: Type of identifier.
+pub trait OptionallyIdentifiedBy<T> {
+    /// Gets this object's identifier, if it has one.
+    fn id(&self) -> Option<&T>;
 }
 
 /// Trait for types that can contain LV2 name information, including multilingual names.

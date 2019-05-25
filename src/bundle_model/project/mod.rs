@@ -3,7 +3,7 @@
 use crate::rdf_util::{Iri, Literal};
 use std::collections::btree_set::BTreeSet;
 use rayon::iter::IntoParallelRefIterator;
-use crate::bundle_model::{Identified, Named};
+use crate::bundle_model::{OptionallyIdentifiedBy, Named};
 use crate::bundle_model::symbol::Symbol;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -22,12 +22,14 @@ pub struct ProjectInfo {
     short_names: BTreeSet<Literal>,
 }
 
-impl Identified for ProjectInfo {
-    fn iri(&self) -> Option<&Iri> {
+impl OptionallyIdentifiedBy<Iri> for ProjectInfo {
+    fn id(&self) -> Option<&Iri> {
         self.iri.as_ref()
     }
+}
 
-    fn symbol(&self) -> Option<&Symbol> {
+impl OptionallyIdentifiedBy<Symbol> for ProjectInfo {
+    fn id(&self) -> Option<&Symbol> {
         self.symbol.as_ref()
     }
 }

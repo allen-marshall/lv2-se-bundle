@@ -6,7 +6,7 @@ use enumset::{EnumSet, EnumSetIter};
 use crate::bundle_model::constants::{ExtensionData, HostFeature};
 use num_bigint::BigUint;
 use rayon::iter::{IterBridge, IntoParallelRefIterator, ParallelBridge};
-use crate::bundle_model::{ResourceVersion, Provider, Requirer, Loadable, Identified, Named, Documented};
+use crate::bundle_model::{ResourceVersion, Provider, Requirer, Loadable, IdentifiedBy, OptionallyIdentifiedBy, Named, Documented};
 use crate::bundle_model::symbol::Symbol;
 use crate::bundle_model::project::ProjectInfo;
 
@@ -102,12 +102,14 @@ impl PluginInfo {
     }
 }
 
-impl Identified for PluginInfo {
-    fn iri(&self) -> Option<&Iri> {
-        Some(&self.iri)
+impl IdentifiedBy<Iri> for PluginInfo {
+    fn id(&self) -> &Iri {
+        &self.iri
     }
+}
 
-    fn symbol(&self) -> Option<&Symbol> {
+impl OptionallyIdentifiedBy<Symbol> for PluginInfo {
+    fn id(&self) -> Option<&Symbol> {
         self.symbol.as_ref()
     }
 }
