@@ -19,8 +19,7 @@ pub struct PluginInfo {
     /// URI pointing to the shared library that implements the plugin.
     binary: Iri,
 
-    /// Human-readable plugin names. Multiple language-tagged literals can be used. These should be
-    /// extracted from the doap:name RDF property.
+    /// Human-readable plugin names. Multiple language-tagged literals can be used.
     names: BTreeSet<Literal>,
 
     /// Plugin documentation embedded in the bundle. Multiple language-tagged literals can be used.

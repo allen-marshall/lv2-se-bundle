@@ -13,8 +13,7 @@ pub struct ProjectInfo {
     /// LV2 symbol identifying the project, if specified.
     symbol: Option<Symbol>,
 
-    /// Human-readable project names. Multiple language-tagged literals can be used. These should be
-    /// extracted from the doap:name RDF property.
+    /// Human-readable project names. Multiple language-tagged literals can be used.
     names: BTreeSet<Literal>
 }
 
