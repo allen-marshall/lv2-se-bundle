@@ -2,7 +2,8 @@
 
 use crate::rdf_util::{Iri, Literal};
 use std::collections::btree_set::BTreeSet;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+use rayon::iter::IntoParallelRefIterator;
+use crate::bundle_model::{Identified, Named};
 use crate::bundle_model::symbol::Symbol;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -14,25 +15,32 @@ pub struct ProjectInfo {
     symbol: Option<Symbol>,
 
     /// Human-readable project names. Multiple language-tagged literals can be used.
-    names: BTreeSet<Literal>
+    names: BTreeSet<Literal>,
+
+    /// Short names for the project, up to 16 Unicode grapheme clusters each. Multiple
+    /// language-tagged literals can be used.
+    short_names: BTreeSet<Literal>,
 }
 
-impl ProjectInfo {
-    /// Gets the IRI identifying the project. Returns [`None`](std::option::Option::None) if the
-    /// bundle does not specify an IRI for the project.
-    pub fn iri(&self) -> Option<&Iri> {
+impl Identified for ProjectInfo {
+    fn iri(&self) -> Option<&Iri> {
         self.iri.as_ref()
     }
 
-    /// Gets the LV2 symbol identifying the project. Returns [`None`](std::option::Option::None) if
-    /// the bundle does not specify a symbol for the project.
-    pub fn symbol(&self) -> Option<&Symbol> {
+    fn symbol(&self) -> Option<&Symbol> {
         self.symbol.as_ref()
     }
+}
 
-    /// Gets an iterator over the human-readable name literals for the project. A project may have
-    /// multiple language-tagged name literals to provide multilingual naming.
-    pub fn names(&self) -> impl ParallelIterator<Item = &Literal> {
+impl<'a> Named<'a> for ProjectInfo {
+    type NamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
+    type ShortNamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn names_iter(&'a self) -> Self::NamesIter {
         self.names.par_iter()
+    }
+
+    fn short_names_iter(&'a self) -> Self::ShortNamesIter {
+        self.short_names.par_iter()
     }
 }
