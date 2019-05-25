@@ -3,6 +3,7 @@
 use num_bigint::BigUint;
 use rayon::iter::{Chain, ParallelIterator};
 use crate::rdf_util::{Iri, Literal};
+use std::borrow::Borrow;
 
 pub mod constants;
 pub mod unknowns;
@@ -127,12 +128,15 @@ pub trait Loadable {
 ///
 /// # Parameters
 /// - `T`: Type of provided element.
-pub trait Provider<T: Send + Sync> {
+pub trait Provider<'a, T: Sync> {
+    /// Type of borrowed element returned by the iterators produced by this trait's methods.
+    type BorrowedElt: Borrow<T> + Send;
+
     /// Type of (parallel) iterator returned by [`provided_iter`](self::Provider::provided_iter).
-    type ProvidedIter: ParallelIterator<Item = T>;
+    type ProvidedIter: ParallelIterator<Item = Self::BorrowedElt>;
 
     /// Gets a (parallel) iterator over the provided elements. The iterator must not repeat items.
-    fn provided_iter(&self) -> Self::ProvidedIter;
+    fn provided_iter(&'a self) -> Self::ProvidedIter;
 
     /// Checks if the specified element is provided. Must return true if and only if `to_check` is
     /// in the set that would be returned by [`provided_iter`](self::Provider::provided_iter). The
@@ -142,10 +146,10 @@ pub trait Provider<T: Send + Sync> {
     ///
     /// # Parameters
     /// - `to_check`: The providable element to check for.
-    fn provides(&self, to_check: &T) -> bool
+    fn provides(&'a self, to_check: &T) -> bool
         where T: Eq
     {
-        self.provided_iter().any(|elt| &elt == to_check)
+        self.provided_iter().any(|elt| elt.borrow() == to_check)
     }
 }
 
@@ -153,19 +157,22 @@ pub trait Provider<T: Send + Sync> {
 ///
 /// # Parameters
 /// - `T`: Type of supported element.
-pub trait Requirer<T: Send + Sync> {
+pub trait Requirer<'a, T: Sync> {
+    /// Type of borrowed element returned by the iterators produced by this trait's methods.
+    type BorrowedElt: Borrow<T> + Send;
+
     /// Type of (parallel) iterator returned by
     /// [`required_iter`](self::Requirer::required_iter).
-    type RequiredIter: ParallelIterator<Item = T>;
+    type RequiredIter: ParallelIterator<Item = Self::BorrowedElt>;
 
     /// Type of (parallel) iterator returned by
     /// [`optionally_supported_iter`](self::Requirer::optionally_supported_iter).
-    type OptionallySupportedIter: ParallelIterator<Item = T>;
+    type OptionallySupportedIter: ParallelIterator<Item = Self::BorrowedElt>;
 
     /// Gets a (parallel) iterator over the required elements. The iterator must not repeat items,
     /// and its contents must be disjoint from those returned by
     /// [`optionally_supported_iter`](self::Requirer::optionally_supported_iter).
-    fn required_iter(&self) -> Self::RequiredIter;
+    fn required_iter(&'a self) -> Self::RequiredIter;
 
     /// Checks if the specified element is required. Must return true if and only if
     /// `to_check` is in the set that would be returned by
@@ -176,16 +183,16 @@ pub trait Requirer<T: Send + Sync> {
     ///
     /// # Parameters
     /// - `to_check`: The element to check for.
-    fn requires(&self, to_check: &T) -> bool
+    fn requires(&'a self, to_check: &T) -> bool
         where T: Eq
     {
-        self.required_iter().any(|elt| &elt == to_check)
+        self.required_iter().any(|elt| elt.borrow() == to_check)
     }
 
     /// Gets a (parallel) iterator over the optionally supported elements. The iterator must not
     /// repeat items, and its contents must be disjoint from those returned by
     /// [`required_iter`](self::Requirer::required_iter).
-    fn optionally_supported_iter(&self) -> Self::OptionallySupportedIter;
+    fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter;
 
     /// Checks if the specified element is optionally required. Must return true if and only if
     /// `to_check` is in the set that would be returned by
@@ -197,17 +204,17 @@ pub trait Requirer<T: Send + Sync> {
     ///
     /// # Parameters
     /// - `to_check`: The element to check for.
-    fn optionally_supports(&self, to_check: &T) -> bool
+    fn optionally_supports(&'a self, to_check: &T) -> bool
         where T: Eq
     {
-        self.optionally_supported_iter().any(|elt| &elt == to_check)
+        self.optionally_supported_iter().any(|elt| elt.borrow() == to_check)
     }
 
     /// Gets a (parallel) iterator over the elements that are supported, as either required elements
     /// or optional elements. The iterator must not repeat items, and must contain a set equal to
     /// the union of the sets returned by [`required_iter`](self::Requirer::required_iter) and
     /// [`optionally_supported_iter`](self::Requirer::optionally_supported_iter).
-    fn supported_iter(&self) -> Chain<Self::RequiredIter, Self::OptionallySupportedIter> {
+    fn supported_iter(&'a self) -> Chain<Self::RequiredIter, Self::OptionallySupportedIter> {
         self.required_iter().chain(self.optionally_supported_iter())
     }
 
@@ -217,7 +224,7 @@ pub trait Requirer<T: Send + Sync> {
     ///
     /// # Parameters
     /// - `to_check`: The element to check for.
-    fn supports(&self, to_check: &T) -> bool
+    fn supports(&'a self, to_check: &T) -> bool
         where T: Eq
     {
         self.requires(to_check) || self.optionally_supports(to_check)
