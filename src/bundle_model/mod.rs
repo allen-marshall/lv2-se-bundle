@@ -1,10 +1,9 @@
 //! Defines data structures representing information available in an LV2 bundle's RDF data.
 
 use num_bigint::BigUint;
+use rayon::iter::{Chain, ParallelIterator};
 use crate::rdf_util::{Iri, Literal};
 use crate::bundle_model::symbol::Symbol;
-use crate::bundle_model::constants::{ExtensionData, HostFeature};
-use std::iter::Chain;
 
 pub mod constants;
 pub mod symbol;
@@ -59,137 +58,161 @@ impl ResourceVersion {
     }
 }
 
-/// Defines basic behavior for loadable LV2 entities described in an LV2 bundle, such as plugins,
-/// UIs, and dynamic manifest generators.
-pub trait LoadableEntity {
+/// Trait for types that can be identified by IRIs and/or LV2 symbols.
+pub trait Identified {
     /// Gets the IRI that identifies the entity. Returns [`None`](std::option::Option::None) if the
     /// LV2 bundle data does not specify an IRI for the entity.
     fn iri(&self) -> Option<&Iri>;
 
-    /// Gets an IRI pointing to the shared library that implements the entity. If the IRI is
-    /// relative, it should be interpreted relative to the bundle path.
-    fn binary(&self) -> Option<&Iri>;
-
-    /// Gets the LV2 symbol identifying the entity. Note that the usual way of identifying a
-    /// loadable entity is by its IRI. However, the symbol may be useful e.g. for plugin searching
-    /// in a host's UI. Returns [`None`](std::option::Option::None) if the bundle does not specify a
-    /// symbol for the entity.
+    /// Gets the LV2 symbol identifying the entity. Returns [`None`](std::option::Option::None) if
+    /// the bundle does not specify a symbol for the entity.
     fn symbol(&self) -> Option<&Symbol>;
 }
 
 /// Trait for types that can contain LV2 name information, including multilingual names.
-pub trait Nameable<'a> {
-    /// Type of iterator returned by [`names_iter`](self::Nameable::names_iter).
-    type NamesIter: Iterator<Item = &'a Literal>;
+pub trait Named<'a> {
+    /// Type of (parallel) iterator returned by [`names_iter`](self::Named::names_iter).
+    type NamesIter: ParallelIterator<Item = &'a Literal>;
 
-    /// Type of iterator returned by [`short_names_iter`](self::Nameable::short_names_iter).
-    type ShortNamesIter: Iterator<Item = &'a Literal>;
+    /// Type of (parallel) iterator returned by [`short_names_iter`](self::Named::short_names_iter).
+    type ShortNamesIter: ParallelIterator<Item = &'a Literal>;
 
-    /// Gets an iterator over the human-readable name literals for the entity. An entity may have
-    /// multiple language-tagged name literals to provide multilingual naming. It also may have no
-    /// name literals at all, in which case the returned iterator must be empty.
+    /// Gets a (parallel) iterator over the human-readable name literals for the entity. An entity
+    /// may have multiple language-tagged name literals to provide multilingual naming. It also may
+    /// have no name literals at all, in which case the returned iterator must be empty.
     fn names_iter(&'a self) -> Self::NamesIter;
 
-    /// Gets an iterator over the short name literals for the entity. An entity may have multiple
-    /// language-tagged short name literals to provide multilingual naming. It also may have no
-    /// short name literals at all, in which case the returned iterator must be empty. Note that the
-    /// set of languages supported by the short name literals doesn't have to correspond to the set
-    /// of languages supported by the long name literals.
+    /// Gets a (parallel) iterator over the short name literals for the entity. An entity may have
+    /// multiple language-tagged short name literals to provide multilingual naming. It also may
+    /// have no short name literals at all, in which case the returned iterator must be empty. Note
+    /// that the set of languages supported by the short name literals doesn't have to correspond to
+    /// the set of languages supported by the long name literals.
     ///
     /// Implementors must ensure that each returned literal's contents (excluding any language tag
     /// or data type information) does not exceed 16 Unicode grapheme clusters.
     fn short_names_iter(&'a self) -> Self::ShortNamesIter;
 }
 
-/// Trait for types that can specify a set of provided LV2 extension data interfaces.
-pub trait ExtensionDataProvider {
-    /// Type of iterator returned by
-    /// [`extension_data_iter`](self::ExtensionDataProvider::extension_data_iter).
-    type ExtensionDataIter: Iterator<Item = ExtensionData>;
+/// Trait for types that can contain LV2 documentation information, including multilingual
+/// documentation.
+pub trait Documented<'a> {
+    /// Type of (parallel) iterator returned by
+    /// [`documentation_iter`](self::Documented::documentation_iter).
+    type DocumentationIter: ParallelIterator<Item = &'a Literal>;
 
-    /// Gets an iterator over the types of extension data provided. The iterator must not repeat
-    /// items.
-    fn extension_data_iter(&self) -> Self::ExtensionDataIter;
+    /// Gets a (parallel) iterator over the documentation literals for the entity. An entity may
+    /// have multiple language-tagged documentation literals to provide multilingual documentation.
+    /// It also may have no documentation literals at all, in which case the returned iterator must
+    /// be empty. The LV2 specification specifies that the contents of each literal should be "a
+    /// valid XHTML Basic 1.1 fragment suitable for use as the content of the \<body\> element."
+    fn documentation_iter(&'a self) -> Self::DocumentationIter;
+}
 
-    /// Checks if the specified type of extension data is provided. Should return true if and only
-    /// if `extension_data` is in the set that would be returned by
-    /// [`extension_data_iter`](self::ExtensionDataProvider::extension_data_iter). The default
-    /// implementation calls
-    /// [`extension_data_iter`](self::ExtensionDataProvider::extension_data_iter) and searches
-    /// sequentially for `extension_data`; a more efficient implementation is likely to be possible
-    /// for most implementing types.
+/// Defines basic behavior for loadable LV2 entities described in an LV2 bundle, such as plugins,
+/// UIs, and dynamic manifest generators.
+pub trait Loadable {
+    /// Gets an IRI pointing to the shared library that implements the entity. If the IRI is
+    /// relative, it should be interpreted relative to the bundle path.
+    fn binary(&self) -> Option<&Iri>;
+}
+
+/// Trait for types that can specify a set of "provided" elements.
+///
+/// # Parameters
+/// - `T`: Type of provided element.
+pub trait Provider<T: Send + Sync> {
+    /// Type of (parallel) iterator returned by [`provided_iter`](self::Provider::provided_iter).
+    type ProvidedIter: ParallelIterator<Item = T>;
+
+    /// Gets a (parallel) iterator over the provided elements. The iterator must not repeat items.
+    fn provided_iter(&self) -> Self::ProvidedIter;
+
+    /// Checks if the specified element is provided. Must return true if and only if `to_check` is
+    /// in the set that would be returned by [`provided_iter`](self::Provider::provided_iter). The
+    /// default implementation calls [`provided_iter`](self::Provider::provided_iter) and searches
+    /// for `to_check`; a more efficient implementation is likely possible for most implementing
+    /// types.
     ///
     /// # Parameters
-    /// - `extension_data`: The type of extension data to check for.
-    fn has_extension_data(&self, extension_data: ExtensionData) -> bool {
-        self.extension_data_iter().any(|ed| ed == extension_data)
+    /// - `to_check`: The providable element to check for.
+    fn provides(&self, to_check: &T) -> bool
+        where T: Eq
+    {
+        self.provided_iter().any(|elt| &elt == to_check)
     }
 }
 
-/// Trait for types that can specify supported and required LV2 host features.
-pub trait HostFeatureSupporter {
-    /// Type of iterator returned by
-    /// [`required_host_features_iter`](self::HostFeatureSupporter::required_host_features_iter).
-    type RequiredHostFeaturesIter: Iterator<Item = HostFeature>;
+/// Trait for types that can specify sets of "required" and "optionally supported" elements.
+///
+/// # Parameters
+/// - `T`: Type of supported element.
+pub trait Requirer<T: Send + Sync> {
+    /// Type of (parallel) iterator returned by
+    /// [`required_iter`](self::Requirer::required_iter).
+    type RequiredIter: ParallelIterator<Item = T>;
 
-    /// Type of iterator returned by
-    /// [`optional_host_features_iter`](self::HostFeatureSupporter::optional_host_features_iter).
-    type OptionalHostFeaturesIter: Iterator<Item = HostFeature>;
+    /// Type of (parallel) iterator returned by
+    /// [`optionally_supported_iter`](self::Requirer::optionally_supported_iter).
+    type OptionallySupportedIter: ParallelIterator<Item = T>;
 
-    /// Gets an iterator over the required host features. The iterator must not repeat items.
-    fn required_host_features_iter(&self) -> Self::RequiredHostFeaturesIter;
+    /// Gets a (parallel) iterator over the required elements. The iterator must not repeat items,
+    /// and its contents must be disjoint from those returned by
+    /// [`optionally_supported_iter`](self::Requirer::optionally_supported_iter).
+    fn required_iter(&self) -> Self::RequiredIter;
 
-    /// Checks if the specified host feature is required. Should return true if and only if
-    /// `host_feature` is in the set that would be returned by
-    /// [`required_host_features_iter`](self::HostFeatureSupporter::required_host_features_iter).
+    /// Checks if the specified element is required. Must return true if and only if
+    /// `to_check` is in the set that would be returned by
+    /// [`required_iter`](self::Requirer::required_iter).
+    /// The default implementation calls [`required_iter`](self::Requirer::required_iter) and
+    /// searches for `to_check`; a more efficient implementation is likely to be possible for most
+    /// implementing types.
+    ///
+    /// # Parameters
+    /// - `to_check`: The element to check for.
+    fn requires(&self, to_check: &T) -> bool
+        where T: Eq
+    {
+        self.required_iter().any(|elt| &elt == to_check)
+    }
+
+    /// Gets a (parallel) iterator over the optionally supported elements. The iterator must not
+    /// repeat items, and its contents must be disjoint from those returned by
+    /// [`required_iter`](self::Requirer::required_iter).
+    fn optionally_supported_iter(&self) -> Self::OptionallySupportedIter;
+
+    /// Checks if the specified element is optionally required. Must return true if and only if
+    /// `to_check` is in the set that would be returned by
+    /// [`optionally_supported_iter`](self::Requirer::optionally_supported_iter).
     /// The default implementation calls
-    /// [`required_host_features_iter`](self::HostFeatureSupporter::required_host_features_iter) and
-    /// searches sequentially for `host_feature`; a more efficient implementation is likely to be
-    /// possible for most implementing types.
+    /// [`optionally_supported_iter`](self::Requirer::optionally_supported_iter) and searches for
+    /// `to_check`; a more efficient implementation is likely to be possible for most implementing
+    /// types.
     ///
     /// # Parameters
-    /// - `host_feature`: The host feature to check for.
-    fn requires_host_feature(&self, host_feature: HostFeature) -> bool {
-        self.required_host_features_iter().any(|hf| hf == host_feature)
+    /// - `to_check`: The element to check for.
+    fn optionally_supports(&self, to_check: &T) -> bool
+        where T: Eq
+    {
+        self.optionally_supported_iter().any(|elt| &elt == to_check)
     }
 
-    /// Gets an iterator over the host features that are supported but not required. The iterator
-    /// must not repeat items, and must define a set that is disjoint from that defined by
-    /// [`required_host_features_iter`](self::HostFeatureSupporter::required_host_features_iter).
-    fn optional_host_features_iter(&self) -> Self::OptionalHostFeaturesIter;
+    /// Gets a (parallel) iterator over the elements that are supported, as either required elements
+    /// or optional elements. The iterator must not repeat items, and must contain a set equal to
+    /// the union of the sets returned by [`required_iter`](self::Requirer::required_iter) and
+    /// [`optionally_supported_iter`](self::Requirer::optionally_supported_iter).
+    fn supported_iter(&self) -> Chain<Self::RequiredIter, Self::OptionallySupportedIter> {
+        self.required_iter().chain(self.optionally_supported_iter())
+    }
 
-    /// Checks if the specified host feature is supported. Should return true if and only if
-    /// `host_feature` is in the set that would be returned by
-    /// [`optional_host_features_iter`](self::HostFeatureSupporter::optional_host_features_iter).
-    /// The default implementation calls
-    /// [`optional_host_features_iter`](self::HostFeatureSupporter::optional_host_features_iter) and
-    /// searches sequentially for `host_feature`; a more efficient implementation is likely to be
-    /// possible for most implementing types.
+    /// Checks if the specified element is supported, as either a required element or an optional
+    /// element. Must return true if and only if `to_check` is in the set that would be returned by
+    /// [`supported_iter`](self::Requirer::supported_iter).
     ///
     /// # Parameters
-    /// - `host_feature`: The host feature to check for.
-    fn optionally_supports_host_feature(&self, host_feature: HostFeature) -> bool {
-        self.optional_host_features_iter().any(|hf| hf == host_feature)
-    }
-
-    /// Gets an iterator over the host features that are supported, as either required features or
-    /// optional features. The iterator must not repeat items, and must define a set equal to the
-    /// union of the sets defined by
-    /// [`required_host_features_iter`](self::HostFeatureSupporter::required_host_features_iter) and
-    /// [`optional_host_features_iter`](self::HostFeatureSupporter::optional_host_features_iter).
-    fn supported_host_features_iter(&self) -> Chain<Self::RequiredHostFeaturesIter, Self::OptionalHostFeaturesIter> {
-        self.required_host_features_iter().chain(self.optional_host_features_iter())
-    }
-
-    /// Checks if the specified host feature is supported, as either a required feature or an
-    /// optional feature. Should return true if and only if `host_feature` is in the set that would
-    /// be returned by
-    /// [`supported_host_features_iter`](self::HostFeatureSupporter::supported_host_features_iter).
-    ///
-    /// # Parameters
-    /// - `host_feature`: The host feature to check for.
-    fn supports_host_feature(&self, host_feature: HostFeature) -> bool {
-        self.requires_host_feature(host_feature)
-            || self.optionally_supports_host_feature(host_feature)
+    /// - `to_check`: The element to check for.
+    fn supports(&self, to_check: &T) -> bool
+        where T: Eq
+    {
+        self.requires(to_check) || self.optionally_supports(to_check)
     }
 }

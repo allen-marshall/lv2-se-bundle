@@ -1,10 +1,11 @@
 //! Representation of LV2 dynamic manifest generator.
 
 use crate::rdf_util::Iri;
-use crate::bundle_model::{LoadableEntity, HostFeatureSupporter};
+use crate::bundle_model::{Loadable, Requirer, Identified};
 use crate::bundle_model::symbol::Symbol;
 use enumset::{EnumSet, EnumSetIter};
 use crate::bundle_model::constants::HostFeature;
+use rayon::iter::{IterBridge, ParallelBridge};
 
 /// Representation of an LV2 dynamic manifest generator.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -27,13 +28,9 @@ pub struct DynManifestInfo {
     optional_host_features: EnumSet<HostFeature>
 }
 
-impl LoadableEntity for DynManifestInfo {
+impl Identified for DynManifestInfo {
     fn iri(&self) -> Option<&Iri> {
         self.iri.as_ref()
-    }
-
-    fn binary(&self) -> Option<&Iri> {
-        Some(&self.binary)
     }
 
     fn symbol(&self) -> Option<&Symbol> {
@@ -41,16 +38,21 @@ impl LoadableEntity for DynManifestInfo {
     }
 }
 
-impl HostFeatureSupporter for DynManifestInfo {
-    type RequiredHostFeaturesIter = EnumSetIter<HostFeature>;
+impl Loadable for DynManifestInfo {
+    fn binary(&self) -> Option<&Iri> {
+        Some(&self.binary)
+    }
+}
 
-    type OptionalHostFeaturesIter = EnumSetIter<HostFeature>;
+impl Requirer<HostFeature> for DynManifestInfo {
+    type RequiredIter = IterBridge<EnumSetIter<HostFeature>>;
+    type OptionallySupportedIter = IterBridge<EnumSetIter<HostFeature>>;
 
-    fn required_host_features_iter(&self) -> Self::RequiredHostFeaturesIter {
-        self.required_host_features.iter()
+    fn required_iter(&self) -> Self::RequiredIter {
+        self.required_host_features.iter().par_bridge()
     }
 
-    fn optional_host_features_iter(&self) -> Self::OptionalHostFeaturesIter {
-        self.optional_host_features.iter()
+    fn optionally_supported_iter(&self) -> Self::OptionallySupportedIter {
+        self.optional_host_features.iter().par_bridge()
     }
 }

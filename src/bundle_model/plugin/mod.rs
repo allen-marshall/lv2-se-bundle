@@ -1,13 +1,12 @@
 //! Representation of LV2 plugins.
 
 use std::collections::BTreeSet;
-use std::collections::btree_set;
 use crate::rdf_util::{Literal, Iri};
 use enumset::{EnumSet, EnumSetIter};
 use crate::bundle_model::constants::{ExtensionData, HostFeature};
 use num_bigint::BigUint;
-use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use crate::bundle_model::{ResourceVersion, LoadableEntity, Nameable, ExtensionDataProvider, HostFeatureSupporter};
+use rayon::iter::{IterBridge, IntoParallelRefIterator, ParallelBridge};
+use crate::bundle_model::{ResourceVersion, Provider, Requirer, Loadable, Identified, Named, Documented};
 use crate::bundle_model::symbol::Symbol;
 use crate::bundle_model::project::ProjectInfo;
 
@@ -74,14 +73,6 @@ impl PluginInfo {
         &self.version
     }
 
-    /// Gets an iterator over the plugin's documentation literals. A plugin may have multiple
-    /// language-tagged documentation literals to provide multilingual documentation. The LV2
-    /// specification indicates that the literal contents should be "a valid XHTML Basic 1.1
-    /// fragment suitable for use as the content of the <body> element."
-    pub fn documentation(&self) -> impl ParallelIterator<Item = &Literal> {
-        self.documentation.par_iter()
-    }
-
     /// Gets the project information for the plugin. Returns [`None`](std::option::Option::None) if
     /// the bundle does not specify a project for the plugin.
     pub fn project(&self) -> Option<&ProjectInfo> {
@@ -112,13 +103,9 @@ impl PluginInfo {
     }
 }
 
-impl LoadableEntity for PluginInfo {
+impl Identified for PluginInfo {
     fn iri(&self) -> Option<&Iri> {
         Some(&self.iri)
-    }
-
-    fn binary(&self) -> Option<&Iri> {
-        Some(&self.binary)
     }
 
     fn symbol(&self) -> Option<&Symbol> {
@@ -126,37 +113,50 @@ impl LoadableEntity for PluginInfo {
     }
 }
 
-impl<'a> Nameable<'a> for PluginInfo {
-    type NamesIter = btree_set::Iter<'a, Literal>;
-    type ShortNamesIter = btree_set::Iter<'a, Literal>;
+impl<'a> Named<'a> for PluginInfo {
+    type NamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
+    type ShortNamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
     fn names_iter(&'a self) -> Self::NamesIter {
-        self.names.iter()
+        self.names.par_iter()
     }
 
     fn short_names_iter(&'a self) -> Self::ShortNamesIter {
-        self.short_names.iter()
+        self.short_names.par_iter()
     }
 }
 
-impl ExtensionDataProvider for PluginInfo {
-    type ExtensionDataIter = EnumSetIter<ExtensionData>;
+impl<'a> Documented<'a> for PluginInfo {
+    type DocumentationIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
-    fn extension_data_iter(&self) -> Self::ExtensionDataIter {
-        self.extension_data.iter()
+    fn documentation_iter(&'a self) -> Self::DocumentationIter {
+        self.documentation.par_iter()
     }
 }
 
-impl HostFeatureSupporter for PluginInfo {
-    type RequiredHostFeaturesIter = EnumSetIter<HostFeature>;
+impl Loadable for PluginInfo {
+    fn binary(&self) -> Option<&Iri> {
+        Some(&self.binary)
+    }
+}
 
-    type OptionalHostFeaturesIter = EnumSetIter<HostFeature>;
+impl Provider<ExtensionData> for PluginInfo {
+    type ProvidedIter = IterBridge<EnumSetIter<ExtensionData>>;
 
-    fn required_host_features_iter(&self) -> Self::RequiredHostFeaturesIter {
-        self.required_host_features.iter()
+    fn provided_iter(&self) -> Self::ProvidedIter {
+        self.extension_data.iter().par_bridge()
+    }
+}
+
+impl Requirer<HostFeature> for PluginInfo {
+    type RequiredIter = IterBridge<EnumSetIter<HostFeature>>;
+    type OptionallySupportedIter = IterBridge<EnumSetIter<HostFeature>>;
+
+    fn required_iter(&self) -> Self::RequiredIter {
+        self.required_host_features.iter().par_bridge()
     }
 
-    fn optional_host_features_iter(&self) -> Self::OptionalHostFeaturesIter {
-        self.optional_host_features.iter()
+    fn optionally_supported_iter(&self) -> Self::OptionallySupportedIter {
+        self.optional_host_features.iter().par_bridge()
     }
 }
