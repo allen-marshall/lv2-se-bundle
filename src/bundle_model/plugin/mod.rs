@@ -30,8 +30,8 @@ pub struct PluginInfo {
     /// Description of the project to which the plugin belongs, if specified.
     project: Option<ProjectInfo>,
 
-    /// Short names for the plugin, up to 16 characters each. Multiple language-tagged literals can
-    /// be used.
+    /// Short names for the plugin, up to 16 Unicode grapheme clusters each. Multiple
+    /// language-tagged literals can be used.
     short_names: BTreeSet<Literal>,
 
     /// LV2 symbol identifying the plugin.
