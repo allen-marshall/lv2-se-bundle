@@ -2,6 +2,13 @@
 
 use regex::Regex;
 
+lazy_static! {
+    /// Regex defining the allowed syntax for an LV2 symbol. A string is a valid LV2 symbol if and
+    /// only if it contains a match of this regex. (The regex uses ^$ to force a full match of the
+    /// string.)
+    static ref SYMBOL_REGEX: Regex = Regex::new("^[_a-zA-Z][_a-zA-Z0-9]*$").unwrap();
+}
+
 /// Type of error generated when constructing a symbol from an invalid string.
 type SymbolError = ();
 
@@ -22,11 +29,7 @@ impl Symbol {
     /// # Errors
     /// Returns an error if `string` is not a valid LV2 symbol string.
     pub fn new(string: String) -> Result<Symbol, SymbolError> {
-        // TODO: Avoid compiling the regex every time new() is called. Might have to wait for more
-        // compile-time function evaluation to make it into Rust.
-        let symbol_regex = Regex::new("^[_a-zA-Z][_a-zA-Z0-9]*$").unwrap();
-
-        if symbol_regex.is_match(&string) {
+        if SYMBOL_REGEX.is_match(&string) {
             Ok(Symbol {
                 string
             })
