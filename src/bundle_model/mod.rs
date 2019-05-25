@@ -5,6 +5,7 @@ use rayon::iter::{Chain, ParallelIterator};
 use crate::rdf_util::{Iri, Literal};
 
 pub mod constants;
+pub mod unknowns;
 pub mod symbol;
 pub mod project;
 pub mod port;
