@@ -13,6 +13,8 @@ pub mod port;
 pub mod plugin;
 pub mod dyn_manifest;
 
+pub(crate) mod impl_util;
+
 /// Represents a version specification for an LV2 resource, such as a plugin. A resource version
 /// consists of a minor version number and a micro version number. There is no major version number,
 /// because LV2 uses the resource's identification IRI instead of a version number to track

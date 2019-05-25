@@ -5,6 +5,7 @@ use std::collections::btree_set::BTreeSet;
 use rayon::iter::IntoParallelRefIterator;
 use crate::bundle_model::{OptionallyIdentifiedBy, Named};
 use crate::bundle_model::symbol::Symbol;
+use crate::bundle_model::impl_util::NamedImpl;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ProjectInfo {
@@ -14,12 +15,8 @@ pub struct ProjectInfo {
     /// LV2 symbol identifying the project, if specified.
     symbol: Option<Symbol>,
 
-    /// Human-readable project names. Multiple language-tagged literals can be used.
-    names: BTreeSet<Literal>,
-
-    /// Short names for the project, up to 16 Unicode grapheme clusters each. Multiple
-    /// language-tagged literals can be used.
-    short_names: BTreeSet<Literal>,
+    /// Name and short name information.
+    named_impl: NamedImpl
 }
 
 impl OptionallyIdentifiedBy<Iri> for ProjectInfo {
@@ -39,10 +36,10 @@ impl<'a> Named<'a> for ProjectInfo {
     type ShortNamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
     fn names_iter(&'a self) -> Self::NamesIter {
-        self.names.par_iter()
+        self.named_impl.names_iter()
     }
 
     fn short_names_iter(&'a self) -> Self::ShortNamesIter {
-        self.short_names.par_iter()
+        self.named_impl.short_names_iter()
     }
 }

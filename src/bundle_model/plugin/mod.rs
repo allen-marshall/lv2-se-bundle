@@ -2,14 +2,15 @@
 
 use std::collections::BTreeSet;
 use crate::rdf_util::{Literal, Iri};
-use enumset::{EnumSet, EnumSetIter};
+use enumset::EnumSetIter;
 use crate::bundle_model::constants::{ExtensionData, HostFeature};
 use crate::bundle_model::unknowns::{UnknownHostFeature, UnknownExtensionData, UnknownOption};
 use num_bigint::BigUint;
-use rayon::iter::{IterBridge, IntoParallelRefIterator, ParallelBridge};
+use rayon::iter::{IterBridge, IntoParallelRefIterator};
 use crate::bundle_model::{ResourceVersion, Provider, Requirer, Loadable, IdentifiedBy, OptionallyIdentifiedBy, Named, Documented};
 use crate::bundle_model::symbol::Symbol;
 use crate::bundle_model::project::ProjectInfo;
+use crate::bundle_model::impl_util::{NamedImpl, DocumentedImpl, ExtensionDataProvider, HostFeatureRequirer};
 
 /// Representation of an LV2 plugin.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -17,68 +18,34 @@ pub struct PluginInfo {
     /// IRI identifying the plugin.
     iri: Iri,
 
-    /// URI pointing to the shared library that implements the plugin.
-    binary: Iri,
-
-    /// Human-readable plugin names. Multiple language-tagged literals can be used.
-    names: BTreeSet<Literal>,
-
-    /// Plugin documentation embedded in the bundle. Multiple language-tagged literals can be used.
-    /// LV2 specifies that the contents should be "a valid XHTML Basic 1.1 fragment suitable for use
-    /// as the content of the <body> element."
-    documentation: BTreeSet<Literal>,
-
-    /// Description of the project to which the plugin belongs, if specified.
-    project: Option<ProjectInfo>,
-
-    /// Short names for the plugin, up to 16 Unicode grapheme clusters each. Multiple
-    /// language-tagged literals can be used.
-    short_names: BTreeSet<Literal>,
-
     /// LV2 symbol identifying the plugin.
     symbol: Option<Symbol>,
+
+    /// URI pointing to the shared library that implements the plugin.
+    binary: Iri,
 
     /// Plugin version.
     version: ResourceVersion,
 
-    /// Number of latency frames introduced by the plugin, if specified.
-    latency: Option<BigUint>,
+    /// Name and short name information.
+    named_impl: NamedImpl,
+
+    /// Documentation information.
+    documented_impl: DocumentedImpl,
+
+    /// Description of the project to which the plugin belongs, if specified.
+    project: Option<ProjectInfo>,
 
     // TODO: Add ports field.
 
-    /// Host features required by the plugin. This set should not intersect with
-    /// [`optional_host_features`](self::PluginInfo::optional_host_features).
-    required_host_features: EnumSet<HostFeature>,
+    /// Information about provided extension data interfaces.
+    extension_data_provider: ExtensionDataProvider,
 
-    /// Host features optionally supported by the plugin. This set should not intersect with
-    /// [`required_host_features`](self::PluginInfo::required_host_features).
-    optional_host_features: EnumSet<HostFeature>,
+    /// Information about required (and optional) host features and LV2 options.
+    host_feature_requirer: HostFeatureRequirer,
 
-    /// Host features that are required by the plugin, but not understood by this crate. This set
-    /// should not intersect with
-    /// [`optional_unknown_host_features`](self::PluginInfo::optional_unknown_host_features)
-    required_unknown_host_features: BTreeSet<UnknownHostFeature>,
-
-    /// Host features that are optionally supported by the plugin, but not understood by this crate.
-    /// This set should not intersect with
-    /// [`required_unknown_host_features`](self::PluginInfo::required_unknown_host_features).
-    optional_unknown_host_features: BTreeSet<UnknownHostFeature>,
-
-    /// LV2 options that are required by the plugin, but not understood by this crate. This set
-    /// should not intersect with
-    /// [`optional_unknown_options`](self::PluginInfo::optional_unknown_options).
-    required_unknown_options: BTreeSet<UnknownOption>,
-
-    /// LV2 options that are optionally supported by the plugin, but not understood by this crate.
-    /// This set should not intersect with
-    /// [`required_unknown_options`](self::PluginInfo::required_unknown_options).
-    optional_unknown_options: BTreeSet<UnknownOption>,
-
-    /// Types of extension data provided by the plugin in `LV2_Descriptor::instantiate()`.
-    extension_data: EnumSet<ExtensionData>,
-
-    /// Types of extension data that are provided by the plugin, but not understood by this crate.
-    unknown_extension_data: BTreeSet<UnknownExtensionData>,
+    /// Number of latency frames introduced by the plugin, if specified.
+    latency: Option<BigUint>,
 
     /// Flag indicating whether the plugin is enabled or bypassed. Most bundles probably won't
     /// specify this, as its value seems to only make sense at runtime.
@@ -143,11 +110,11 @@ impl<'a> Named<'a> for PluginInfo {
     type ShortNamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
     fn names_iter(&'a self) -> Self::NamesIter {
-        self.names.par_iter()
+        self.named_impl.names_iter()
     }
 
     fn short_names_iter(&'a self) -> Self::ShortNamesIter {
-        self.short_names.par_iter()
+        self.named_impl.short_names_iter()
     }
 }
 
@@ -155,7 +122,7 @@ impl<'a> Documented<'a> for PluginInfo {
     type DocumentationIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
     fn documentation_iter(&'a self) -> Self::DocumentationIter {
-        self.documentation.par_iter()
+        self.documented_impl.documentation_iter()
     }
 }
 
@@ -170,7 +137,7 @@ impl<'a> Provider<'a, ExtensionData> for PluginInfo {
     type ProvidedIter = IterBridge<EnumSetIter<ExtensionData>>;
 
     fn provided_iter(&'a self) -> Self::ProvidedIter {
-        self.extension_data.iter().par_bridge()
+        <ExtensionDataProvider as Provider<'a, ExtensionData>>::provided_iter(&self.extension_data_provider)
     }
 }
 
@@ -179,7 +146,7 @@ impl<'a> Provider<'a, UnknownExtensionData> for PluginInfo {
     type ProvidedIter = <BTreeSet<UnknownExtensionData> as IntoParallelRefIterator<'a>>::Iter;
 
     fn provided_iter(&'a self) -> Self::ProvidedIter {
-        self.unknown_extension_data.par_iter()
+        <ExtensionDataProvider as Provider<'a, UnknownExtensionData>>::provided_iter(&self.extension_data_provider)
     }
 }
 
@@ -189,11 +156,11 @@ impl<'a> Requirer<'a, HostFeature> for PluginInfo {
     type OptionallySupportedIter = IterBridge<EnumSetIter<HostFeature>>;
 
     fn required_iter(&'a self) -> Self::RequiredIter {
-        self.required_host_features.iter().par_bridge()
+        <HostFeatureRequirer as Requirer<'a, HostFeature>>::required_iter(&self.host_feature_requirer)
     }
 
     fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
-        self.optional_host_features.iter().par_bridge()
+        <HostFeatureRequirer as Requirer<'a, HostFeature>>::optionally_supported_iter(&self.host_feature_requirer)
     }
 }
 
@@ -203,11 +170,11 @@ impl<'a> Requirer<'a, UnknownHostFeature> for PluginInfo {
     type OptionallySupportedIter = <BTreeSet<UnknownHostFeature> as IntoParallelRefIterator<'a>>::Iter;
 
     fn required_iter(&'a self) -> Self::RequiredIter {
-        self.required_unknown_host_features.par_iter()
+        <HostFeatureRequirer as Requirer<'a, UnknownHostFeature>>::required_iter(&self.host_feature_requirer)
     }
 
     fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
-        self.optional_unknown_host_features.par_iter()
+        <HostFeatureRequirer as Requirer<'a, UnknownHostFeature>>::optionally_supported_iter(&self.host_feature_requirer)
     }
 }
 
@@ -217,10 +184,10 @@ impl<'a> Requirer<'a, UnknownOption> for PluginInfo {
     type OptionallySupportedIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
 
     fn required_iter(&'a self) -> Self::RequiredIter {
-        self.required_unknown_options.par_iter()
+        <HostFeatureRequirer as Requirer<'a, UnknownOption>>::required_iter(&self.host_feature_requirer)
     }
 
     fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
-        self.optional_unknown_options.par_iter()
+        <HostFeatureRequirer as Requirer<'a, UnknownOption>>::optionally_supported_iter(&self.host_feature_requirer)
     }
 }
