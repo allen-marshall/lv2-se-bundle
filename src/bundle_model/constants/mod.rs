@@ -9,7 +9,7 @@
 /// [`PartialOrd`](std::cmp::PartialOrd) have little semantic meaning, and exist mainly for use
 /// with collections that require an ordered element type. In particular, superclasses are not
 /// guaranteed to have a particular ordering relative to their subclasses.
-#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType)]
+#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
 pub enum PluginType {
     Delay,
     Reverb,
@@ -53,7 +53,7 @@ pub enum PluginType {
 /// Identifiers for standard host features that can be supported and/or required by a plugin or
 /// LV2 UI. Does not include UI port protocol features; for those, see
 /// [`UiPortProtocol`](self::UiPortProtocol).
-#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType)]
+#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
 pub enum HostFeature {
     /// A plugin can support this feature to indicate that it is a 'hard real-time' plugin. Note
     /// that the LV2 standard defines some restrictions on the behavior of hard real-time
@@ -167,7 +167,7 @@ pub enum HostFeature {
 
 /// Identifiers for standard host features that represent LV2 port protocols used by LV2 UIs. A
 /// port protocol defines a way for the LV2 UI and plugin to communicate port values.
-#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType)]
+#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
 pub enum UiPortProtocol {
     /// Port protocol for transferring atoms.
     Atom,
@@ -184,7 +184,7 @@ pub enum UiPortProtocol {
 }
 
 /// Identifiers for standard extension interfaces that a plugin or LV2 UI can provide.
-#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType)]
+#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
 pub enum ExtensionData {
     /// Extension interface for dynamically setting and getting LV2 options.
     Options,
@@ -214,7 +214,7 @@ pub enum ExtensionData {
 /// [`PartialOrd`](std::cmp::PartialOrd) have little semantic meaning, and exist mainly for use
 /// with collections that require an ordered element type. In particular, superclasses are not
 /// guaranteed to have a particular ordering relative to their subclasses.
-#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType)]
+#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
 pub enum AtomType {
     /// Base class for the atom class hierarchy.
     Atom,
@@ -350,7 +350,7 @@ pub enum AtomType {
 }
 
 /// Identifiers for measurement units defined by the LV2 standard.
-#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType)]
+#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
 pub enum Unit {
     Bar,
     Beat,
@@ -384,7 +384,7 @@ pub enum Unit {
 }
 
 /// Identifiers for standard LV2 port properties that can apply to a port.
-#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType)]
+#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
 pub enum PortProperty {
     /// Indicates that connecting the port to a non-null buffer is optional.
     ConnOptional,
@@ -441,7 +441,7 @@ pub enum PortProperty {
 
 /// Identifiers for standard LV2 'designations' that can apply to a port. Does not include
 /// channel designations; for those, see [`PortChannel`](self::PortChannel).
-#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType)]
+#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
 pub enum PortDesignation {
     /// Designates the port as representing an amplitude.
     Amplitude,
@@ -505,7 +505,7 @@ pub enum PortDesignation {
 }
 
 /// Identifiers for standard LV2 channel designations that can apply to a port.
-#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType)]
+#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
 pub enum PortChannel {
     /// Designates the port as a main control channel. Typically used for a MIDI channel that
     /// controls an instrument plugin.
