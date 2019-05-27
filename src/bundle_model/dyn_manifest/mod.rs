@@ -50,11 +50,11 @@ impl<'a> Requirer<'a, HostFeature> for DynManifestInfo {
     type OptionallySupportedIter = IterBridge<EnumSetIter<HostFeature>>;
 
     fn required_iter(&'a self) -> Self::RequiredIter {
-        <HostFeatureRequirer as Requirer<'a, HostFeature>>::required_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.required_host_features.knowns_iter()
     }
 
     fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
-        <HostFeatureRequirer as Requirer<'a, HostFeature>>::optionally_supported_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.optional_host_features.knowns_iter()
     }
 }
 
@@ -64,11 +64,11 @@ impl<'a> Requirer<'a, UnknownHostFeature> for DynManifestInfo {
     type OptionallySupportedIter = <BTreeSet<UnknownHostFeature> as IntoParallelRefIterator<'a>>::Iter;
 
     fn required_iter(&'a self) -> Self::RequiredIter {
-        <HostFeatureRequirer as Requirer<'a, UnknownHostFeature>>::required_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.required_host_features.unknowns_iter()
     }
 
     fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
-        <HostFeatureRequirer as Requirer<'a, UnknownHostFeature>>::optionally_supported_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.optional_host_features.unknowns_iter()
     }
 }
 
@@ -78,10 +78,10 @@ impl<'a> Requirer<'a, UnknownOption> for DynManifestInfo {
     type OptionallySupportedIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
 
     fn required_iter(&'a self) -> Self::RequiredIter {
-        <HostFeatureRequirer as Requirer<'a, UnknownOption>>::required_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.required_options.par_iter()
     }
 
     fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
-        <HostFeatureRequirer as Requirer<'a, UnknownOption>>::optionally_supported_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.optional_options.par_iter()
     }
 }

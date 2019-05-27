@@ -36,10 +36,10 @@ impl<'a> Named<'a> for ProjectInfo {
     type ShortNamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
     fn names_iter(&'a self) -> Self::NamesIter {
-        self.named_impl.names_iter()
+        self.named_impl.names.par_iter()
     }
 
     fn short_names_iter(&'a self) -> Self::ShortNamesIter {
-        self.named_impl.short_names_iter()
+        self.named_impl.short_names.par_iter()
     }
 }

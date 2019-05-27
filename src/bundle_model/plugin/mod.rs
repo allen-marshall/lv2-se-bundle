@@ -10,7 +10,7 @@ use rayon::iter::{IterBridge, IntoParallelRefIterator};
 use crate::bundle_model::{ResourceVersion, Provider, Requirer, Loadable, IdentifiedBy, OptionallyIdentifiedBy, Named, Documented};
 use crate::bundle_model::symbol::Symbol;
 use crate::bundle_model::project::ProjectInfo;
-use crate::bundle_model::impl_util::{NamedImpl, DocumentedImpl, ExtensionDataProvider, HostFeatureRequirer};
+use crate::bundle_model::impl_util::{KnownAndUnknownSet, NamedImpl, DocumentedImpl, HostFeatureRequirer};
 
 /// Representation of an LV2 plugin.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -38,8 +38,8 @@ pub struct PluginInfo {
 
     // TODO: Add ports field.
 
-    /// Information about provided extension data interfaces.
-    extension_data_provider: ExtensionDataProvider,
+    /// Set of LV2 extension data interfaces provided by the plugin.
+    provided_extension_data: KnownAndUnknownSet<ExtensionData, UnknownExtensionData>,
 
     /// Information about required (and optional) host features and LV2 options.
     host_feature_requirer: HostFeatureRequirer,
@@ -110,11 +110,11 @@ impl<'a> Named<'a> for PluginInfo {
     type ShortNamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
     fn names_iter(&'a self) -> Self::NamesIter {
-        self.named_impl.names_iter()
+        self.named_impl.names.par_iter()
     }
 
     fn short_names_iter(&'a self) -> Self::ShortNamesIter {
-        self.named_impl.short_names_iter()
+        self.named_impl.short_names.par_iter()
     }
 }
 
@@ -122,7 +122,7 @@ impl<'a> Documented<'a> for PluginInfo {
     type DocumentationIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
     fn documentation_iter(&'a self) -> Self::DocumentationIter {
-        self.documented_impl.documentation_iter()
+        self.documented_impl.documentation.par_iter()
     }
 }
 
@@ -137,7 +137,7 @@ impl<'a> Provider<'a, ExtensionData> for PluginInfo {
     type ProvidedIter = IterBridge<EnumSetIter<ExtensionData>>;
 
     fn provided_iter(&'a self) -> Self::ProvidedIter {
-        <ExtensionDataProvider as Provider<'a, ExtensionData>>::provided_iter(&self.extension_data_provider)
+        self.provided_extension_data.knowns_iter()
     }
 }
 
@@ -146,7 +146,7 @@ impl<'a> Provider<'a, UnknownExtensionData> for PluginInfo {
     type ProvidedIter = <BTreeSet<UnknownExtensionData> as IntoParallelRefIterator<'a>>::Iter;
 
     fn provided_iter(&'a self) -> Self::ProvidedIter {
-        <ExtensionDataProvider as Provider<'a, UnknownExtensionData>>::provided_iter(&self.extension_data_provider)
+        self.provided_extension_data.unknowns_iter()
     }
 }
 
@@ -156,11 +156,11 @@ impl<'a> Requirer<'a, HostFeature> for PluginInfo {
     type OptionallySupportedIter = IterBridge<EnumSetIter<HostFeature>>;
 
     fn required_iter(&'a self) -> Self::RequiredIter {
-        <HostFeatureRequirer as Requirer<'a, HostFeature>>::required_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.required_host_features.knowns_iter()
     }
 
     fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
-        <HostFeatureRequirer as Requirer<'a, HostFeature>>::optionally_supported_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.optional_host_features.knowns_iter()
     }
 }
 
@@ -170,11 +170,11 @@ impl<'a> Requirer<'a, UnknownHostFeature> for PluginInfo {
     type OptionallySupportedIter = <BTreeSet<UnknownHostFeature> as IntoParallelRefIterator<'a>>::Iter;
 
     fn required_iter(&'a self) -> Self::RequiredIter {
-        <HostFeatureRequirer as Requirer<'a, UnknownHostFeature>>::required_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.required_host_features.unknowns_iter()
     }
 
     fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
-        <HostFeatureRequirer as Requirer<'a, UnknownHostFeature>>::optionally_supported_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.optional_host_features.unknowns_iter()
     }
 }
 
@@ -184,10 +184,10 @@ impl<'a> Requirer<'a, UnknownOption> for PluginInfo {
     type OptionallySupportedIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
 
     fn required_iter(&'a self) -> Self::RequiredIter {
-        <HostFeatureRequirer as Requirer<'a, UnknownOption>>::required_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.required_options.par_iter()
     }
 
     fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
-        <HostFeatureRequirer as Requirer<'a, UnknownOption>>::optionally_supported_iter(&self.host_feature_requirer)
+        self.host_feature_requirer.optional_options.par_iter()
     }
 }
