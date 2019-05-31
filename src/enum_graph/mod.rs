@@ -89,9 +89,7 @@ impl<T: EnumSetType + Enum<EnumSet<T>>> EnumSetDiGraph<T> {
     pub fn transitive_closure(&self) -> Self {
         let mut output = EnumSetDiGraph::new();
         for from in EnumSet::all() {
-            for to in self.reachable_nodes(from) {
-                output.insert_edge(from, to)
-            }
+            output.adj_sets[from] = self.reachable_nodes(from);
         }
 
         output
