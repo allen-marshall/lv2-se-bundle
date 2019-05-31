@@ -130,9 +130,17 @@ impl<T: EnumSetType + Enum<EnumSet<T>>> PartialOrd for EnumSetDiGraph<T> {
 
 impl<T: EnumSetType + Enum<EnumSet<T>>> Ord for EnumSetDiGraph<T> {
     fn cmp(&self, other: &Self) -> Ordering {
-        // Here we assume that two EnumMaps of the same type will always return their values in the
-        // same key order.
-        // TODO: Maybe don't make this assumption.
-        self.adj_sets.values().cmp(other.adj_sets.values())
+        // Use Enum::POSSIBLE_VALUES to guarantee a stable node ordering for the comparison.
+        // (EnumSet and EnumMap could probably also provide a stable ordering, but this is not
+        // guaranteed in their documentation.)
+        for node_id in 0..T::POSSIBLE_VALUES {
+            let node = T::from_usize(node_id);
+            let node_order = self.adj_sets[node].cmp(&other.adj_sets[node]);
+            if node_order != Ordering::Equal {
+                return node_order;
+            }
+        }
+
+        Ordering::Equal
     }
 }
