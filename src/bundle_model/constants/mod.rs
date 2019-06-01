@@ -51,6 +51,38 @@ pub enum PluginType {
     Mixer
 }
 
+/// Identifiers for standard LV2 port classes.
+#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
+pub enum PortType {
+    /// Input port. This is *not* mutually exclusive with
+    /// [`OutputPort`](self::PortType::OutputPort), as an LV2 port can be simultaneously an input
+    /// port and an output port.
+    InputPort,
+
+    /// Output port. This is *not* mutually exclusive with [`InputPort`](self::PortType::InputPort),
+    /// as an LV2 port can be simultaneously an input port and an output port.
+    OutputPort,
+
+    /// Audio-rate port.
+    Audio,
+
+    /// Audio-rate control port.
+    CV,
+
+    /// Control-rate port.
+    Control,
+
+    /// Port that reads and/or writes LV2 atoms.
+    Atom,
+
+    /// Port whose type can be morphed by the host.
+    Morph,
+
+    /// Port whose type can be morphed by the plugin (only in response to host morphing of some port
+    /// on the same plugin instance).
+    AutoMorph
+}
+
 /// Identifiers for standard host features that can be supported and/or required by a plugin or
 /// LV2 UI. Does not include UI port protocol features; for those, see
 /// [`UiPortProtocol`](self::UiPortProtocol).

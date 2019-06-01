@@ -56,29 +56,9 @@ pub struct ScalePoint {
     value: OrderedFloat<f32>
 }
 
-/// Enumeration of boolean properties a port can have. Several, but not all, of these flags
-/// correspond to instances of the `lv2:PortProperty` RDF class from the LV2 standard.
-#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType)]
-enum PortFlags {
-    /// Indicates that the port can receive input. A port can have input, output, both, or
-    /// neither.
-    InputPort,
-
-    /// Indicates that the port can produce output. A port can have input, output, both, or
-    /// neither.
-    OutputPort,
-
-    /// Indicates that the port may automatically change its port type whenever a port on the
-    /// same plugin instance is morphed by the host.
-    AutoMorphable
-}
-
 /// Representation of an LV2 port.
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
 pub struct Port {
-    /// Some boolean properties.
-    flags: EnumSet<PortFlags>,
-
     /// Standard LV2 port properties that apply to the port.
     port_props: EnumSet<PortProperty>,
 
