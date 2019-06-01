@@ -35,6 +35,7 @@ pub enum PluginType {
     Constant,
     Instrument,
     Oscillator,
+    Midi,
     Modulator,
     Chorus,
     Flanger,

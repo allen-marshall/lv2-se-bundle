@@ -31,8 +31,6 @@ lazy_static! {
             (PluginType::Bandpass, PluginType::Filter),
             (PluginType::Comb, PluginType::Filter),
             (PluginType::EQ, PluginType::Filter),
-            (PluginType::MultiEQ, PluginType::Filter),
-            (PluginType::ParaEQ, PluginType::Filter),
             (PluginType::Highpass, PluginType::Filter),
             (PluginType::Lowpass, PluginType::Filter),
             (PluginType::MultiEQ, PluginType::EQ),
