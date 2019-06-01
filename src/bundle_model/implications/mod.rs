@@ -5,57 +5,61 @@
 // build time, maybe using macros and/or RDF?
 
 use enumset::EnumSet;
+use enum_map::EnumMap;
+use rayon::iter::FromParallelIterator;
 
 use crate::bundle_model::constants::{PluginType, PortDesignation, Unit};
+use crate::enum_graph::EnumSetDiGraph;
 
-/// Finds plugin types implied by other plugin types. If a plugin is explicitly identified as
-/// belonging to the plugin types in a set `x`, it must also belong to all plugin types in the set
-/// `plug_types_implied_by_plug_types(x)`. The returned set will contain at least the same set of
-/// plugin types provided in the argument.
-pub(crate) fn plugin_types_implied_by_plugin_types(explicit_plugin_types: EnumSet<PluginType>) -> EnumSet<PluginType> {
-    let mut plugin_types = explicit_plugin_types;
+lazy_static! {
+    /// Directed graph defining the implications among plugin types. If an edge (p0, p1) exists in
+    /// the graph, then all plugins of type p0 must also be of type p1. The graph is its own
+    /// transitive closure, so there is no need to consider indirect paths when finding the implied
+    /// plugin types.
+    pub static ref PLUGIN_TYPES_IMPLIED: EnumSetDiGraph<PluginType> = {
+        let direct_implications = vec![
+            (PluginType::Reverb, PluginType::Delay),
+            (PluginType::Reverb, PluginType::Simulator),
+            (PluginType::Waveshaper, PluginType::Distortion),
+            (PluginType::Amplifier, PluginType::Dynamics),
+            (PluginType::Compressor, PluginType::Dynamics),
+            (PluginType::Envelope, PluginType::Dynamics),
+            (PluginType::Expander, PluginType::Dynamics),
+            (PluginType::Gate, PluginType::Dynamics),
+            (PluginType::Limiter, PluginType::Dynamics),
+            (PluginType::Allpass, PluginType::Filter),
+            (PluginType::Bandpass, PluginType::Filter),
+            (PluginType::Comb, PluginType::Filter),
+            (PluginType::EQ, PluginType::Filter),
+            (PluginType::MultiEQ, PluginType::Filter),
+            (PluginType::ParaEQ, PluginType::Filter),
+            (PluginType::Highpass, PluginType::Filter),
+            (PluginType::Lowpass, PluginType::Filter),
+            (PluginType::MultiEQ, PluginType::EQ),
+            (PluginType::ParaEQ, PluginType::EQ),
+            (PluginType::Constant, PluginType::Generator),
+            (PluginType::Instrument, PluginType::Generator),
+            (PluginType::Oscillator, PluginType::Generator),
+            (PluginType::Chorus, PluginType::Modulator),
+            (PluginType::Flanger, PluginType::Modulator),
+            (PluginType::Phaser, PluginType::Modulator),
+            (PluginType::Pitch, PluginType::Spectral),
+            (PluginType::Analyser, PluginType::Utility),
+            (PluginType::Converter, PluginType::Utility),
+            (PluginType::Function, PluginType::Utility),
+            (PluginType::Mixer, PluginType::Utility)
+        ];
+        EnumSetDiGraph::from_par_iter(direct_implications).transitive_closure()
+    };
 
-    // Insert plugin type superclasses if any of their subclasses are present.
-    if explicit_plugin_types.contains(PluginType::Reverb) {
-        plugin_types.insert(PluginType::Delay);
-        plugin_types.insert(PluginType::Simulator);
-    }
-    if explicit_plugin_types.contains(PluginType::Waveshaper) {
-        plugin_types.insert(PluginType::Distortion);
-    }
-    if !explicit_plugin_types.is_disjoint(PluginType::Amplifier | PluginType::Compressor | PluginType::Envelope | PluginType::Expander | PluginType::Gate | PluginType::Limiter) {
-        plugin_types.insert(PluginType::Dynamics);
-    }
-    if !explicit_plugin_types.is_disjoint(PluginType::Allpass | PluginType::Bandpass | PluginType::Comb | PluginType::EQ | PluginType::MultiEQ | PluginType::ParaEQ | PluginType::Highpass | PluginType::Lowpass) {
-        plugin_types.insert(PluginType::Filter);
-    }
-    if !explicit_plugin_types.is_disjoint(PluginType::MultiEQ | PluginType::ParaEQ) {
-        plugin_types.insert(PluginType::EQ);
-    }
-    if !explicit_plugin_types.is_disjoint(PluginType::Constant | PluginType::Instrument | PluginType::Oscillator) {
-        plugin_types.insert(PluginType::Generator);
-    }
-    if !explicit_plugin_types.is_disjoint(PluginType::Chorus | PluginType::Flanger | PluginType::Phaser) {
-        plugin_types.insert(PluginType::Modulator);
-    }
-    if explicit_plugin_types.contains(PluginType::Pitch) {
-        plugin_types.insert(PluginType::Spectral);
-    }
-    if !explicit_plugin_types.is_disjoint(PluginType::Analyser | PluginType::Converter | PluginType::Function | PluginType::Mixer) {
-        plugin_types.insert(PluginType::Utility);
-    }
-
-    plugin_types
-}
-
-/// Finds port units implied by a set of LV2 port designations. Some port designations automatically
-/// imply a unit for the port, and this function looks for such cases. The returned set is empty if
-/// none of the specified port designations imply a unit.
-pub(crate) fn units_implied_by_designations(designations: EnumSet<PortDesignation>) -> EnumSet<Unit> {
-    if designations.contains(PortDesignation::Gain) {
-        EnumSet::only(Unit::Decibel)
-    }
-    else {
-        EnumSet::empty()
-    }
+    /// Maps LV2 port designations to the port units that they imply, if any.
+    pub static ref UNITS_IMPLIED_BY_DESIGNATIONS: EnumMap<PortDesignation, Option<Unit>> = {
+        let implications = vec![
+            (PortDesignation::Gain, Unit::Decibel)
+        ];
+        let mut output = EnumMap::from(|_| None);
+        output.extend(implications.into_iter()
+            .map(|(designation, unit)| (designation, Some(unit))));
+        output
+    };
 }
