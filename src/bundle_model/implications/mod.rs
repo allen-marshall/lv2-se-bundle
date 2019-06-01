@@ -4,7 +4,6 @@
 // TODO: Explore possibility of generating some of the information in this module automatically at
 // build time, maybe using macros and/or RDF?
 
-use enumset::EnumSet;
 use enum_map::EnumMap;
 use rayon::iter::FromParallelIterator;
 
