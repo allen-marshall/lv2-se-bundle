@@ -422,10 +422,12 @@ pub enum PortProperty {
     /// Indicates that connecting the port to a non-null buffer is optional.
     ConnOptional,
 
-    /// Indicates that the port's only valid values are those defined by its scale points.
+    /// Indicates that the port's only useful values are those defined by its scale points. Hosts
+    /// *are* allowed to set values outside the scale points even if this property is set.
     Enumeration,
 
-    /// Indicates that the port's only valid values are integers.
+    /// Indicates that the port's only useful values are integers. Hosts *are* allowed to set
+    /// non-integer values even if this property is set.
     IntOnly,
 
     /// Indicates that the port is a 'sidechain' rather than a main port. Hosts are not required

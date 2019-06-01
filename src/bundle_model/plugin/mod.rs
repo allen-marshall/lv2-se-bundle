@@ -10,6 +10,7 @@ use rayon::iter::{IterBridge, IntoParallelRefIterator, ParallelIterator};
 use crate::bundle_model::{ResourceVersion, Loadable, IdentifiedBy, OptionallyIdentifiedBy, HasRelatedSet, NameRelation, ShortNameRelation, DocRelation, RequiresRelation, OptionallySupportsRelation, ProvidesRelation};
 use crate::bundle_model::symbol::Symbol;
 use crate::bundle_model::project::ProjectInfo;
+use crate::bundle_model::port::PortInfo;
 use crate::bundle_model::impl_util::{KnownAndUnknownSet, NamedImpl, DocumentedImpl, HostFeatureRequirer};
 
 /// Representation of an LV2 plugin.
@@ -36,10 +37,13 @@ pub struct PluginInfo {
     /// Documentation information.
     documented_impl: DocumentedImpl,
 
+    // TODO: Avoid creating multiple ProjectInfo objects for the same project if multiple plugins
+    // are part of the same project. Maybe use Option<Iri> instead of Option<ProjectInfo>?
     /// Description of the project to which the plugin belongs, if specified.
     project: Option<ProjectInfo>,
 
-    // TODO: Add ports field.
+    /// Description of the plugin's ports, in order of their port indices.
+    ports: Vec<PortInfo>,
 
     /// Set of LV2 extension data interfaces provided by the plugin.
     provided_extension_data: KnownAndUnknownSet<ExtensionData, UnknownExtensionData>,

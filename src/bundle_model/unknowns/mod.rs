@@ -156,7 +156,33 @@ impl UnknownPortDesignation {
     }
 }
 
+/// Represents an LV2 port property that this crate doesn't understand.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct UnknownPortProperty {
+    /// LV2 port properties are typically represented by an IRI, so this type is just a wrapper
+    /// around [`Iri`](crate::rdf_util::Iri).
+    iri: Iri
+}
+
 impl IdentifiedBy<Iri> for UnknownPortDesignation {
+    fn id(&self) -> &Iri {
+        &self.iri
+    }
+}
+
+impl UnknownPortProperty {
+    /// Constructs a representation of an unknown LV2 port property.
+    ///
+    /// # Parameters
+    /// - `iri`: IRI identifying the port property.
+    pub fn new(iri: Iri) -> UnknownPortProperty {
+        UnknownPortProperty {
+            iri
+        }
+    }
+}
+
+impl IdentifiedBy<Iri> for UnknownPortProperty {
     fn id(&self) -> &Iri {
         &self.iri
     }

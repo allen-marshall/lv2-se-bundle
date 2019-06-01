@@ -133,6 +133,11 @@ pub enum NameRelation {}
 pub enum ShortNameRelation {}
 
 /// Relation type for [`HasRelatedSet`](self::HasRelatedSet), which indicates that the set elements
+/// are labels for the instance that "has" the set. Multiple language-tagged labels are allowed in
+/// order to support multilingual labelling.
+pub enum LabelRelation {}
+
+/// Relation type for [`HasRelatedSet`](self::HasRelatedSet), which indicates that the set elements
 /// are documentation strings for the instance that "has" the set. Multiple language-tagged
 /// documentation strings are allowed in order to support multilingual documentation.
 ///

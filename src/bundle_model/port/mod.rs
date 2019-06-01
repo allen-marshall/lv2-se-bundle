@@ -1,19 +1,48 @@
 //! Representation of LV2 ports.
 
 use rayon::iter::{IntoParallelRefIterator, IterBridge, ParallelBridge};
-use crate::bundle_model::{HasRelatedSet, NameRelation, ShortNameRelation, DocRelation, TypeRelation, GenericRelation};
+use crate::bundle_model::{HasRelatedSet, NameRelation, ShortNameRelation, DocRelation, TypeRelation, LabelRelation, GenericRelation, IdentifiedBy, OptionallyIdentifiedBy};
 use crate::bundle_model::impl_util::{KnownAndUnknownSet, DocumentedImpl, NamedImpl};
-use crate::bundle_model::constants::{PortType, PortDesignation, PortChannel};
-use crate::bundle_model::unknowns::{UnknownPortType, UnknownPortDesignation};
+use crate::bundle_model::constants::{PortType, PortDesignation, PortChannel, PortProperty};
+use crate::bundle_model::unknowns::{UnknownPortType, UnknownPortDesignation, UnknownPortProperty};
+use crate::bundle_model::symbol::Symbol;
 use crate::rdf_util::Literal;
 use enumset::{EnumSet, EnumSetIter};
 use std::collections::BTreeSet;
+use ordered_float::OrderedFloat;
+
+/// Represents a scale point, i.e. a special marked value for a control port.
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
+pub struct ScalePoint {
+    /// Labels to be displayed in association with the scale point.
+    labels: BTreeSet<Literal>,
+
+    /// Control port value for the scale point.
+    value: OrderedFloat<f32>
+}
+
+impl<'a> HasRelatedSet<'a, LabelRelation, Literal> for ScalePoint {
+    type BorrowedElt = &'a Literal;
+    type SetIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.labels.par_iter()
+    }
+}
 
 /// Representation of an LV2 port.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct PortInfo {
     /// Set of LV2 port types to which the port belongs.
     port_types: KnownAndUnknownSet<PortType, UnknownPortType>,
+
+    // TODO: Make a separate type for the port index so the IdentifiedBy impl is clearer?
+
+    /// Port index.
+    index: u32,
+
+    /// Port symbol.
+    symbol: Option<Symbol>,
 
     /// Name and short name information.
     named_impl: NamedImpl,
@@ -22,7 +51,19 @@ pub struct PortInfo {
     documented_impl: DocumentedImpl,
 
     /// Default value for the port.
-    default: Option<Literal>,
+    default_value: Option<Literal>,
+
+    /// Soft maximum value for the port. Hosts *are* allowed to set the value higher.
+    max_value: Option<Literal>,
+
+    /// Soft minimum value for the port. Hosts *are* allowed to set the value lower.
+    min_value: Option<Literal>,
+
+    /// Scale points for the port, i.e. special marked values.
+    scale_pts: BTreeSet<ScalePoint>,
+
+    /// LV2 port properties that apply to the port.
+    port_props: KnownAndUnknownSet<PortProperty, UnknownPortProperty>,
 
     /// Standard LV2 designations that apply to the port.
     designations: EnumSet<PortDesignation>,
@@ -32,6 +73,18 @@ pub struct PortInfo {
 
     /// Unknown LV2 designations (including channel designations) that apply to the port.
     unknown_designations: BTreeSet<UnknownPortDesignation>
+}
+
+impl IdentifiedBy<u32> for PortInfo {
+    fn id(&self) -> &u32 {
+        &self.index
+    }
+}
+
+impl OptionallyIdentifiedBy<Symbol> for PortInfo {
+    fn id(&self) -> Option<&Symbol> {
+        self.symbol.as_ref()
+    }
 }
 
 impl<'a> HasRelatedSet<'a, TypeRelation, PortType> for PortInfo {
@@ -103,5 +156,32 @@ impl<'a> HasRelatedSet<'a, GenericRelation, UnknownPortDesignation> for PortInfo
 
     fn set_iter(&'a self) -> Self::SetIter {
         self.unknown_designations.par_iter()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, GenericRelation, PortProperty> for PortInfo {
+    type BorrowedElt = PortProperty;
+    type SetIter = IterBridge<EnumSetIter<PortProperty>>;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.port_props.knowns_iter()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, GenericRelation, UnknownPortProperty> for PortInfo {
+    type BorrowedElt = &'a UnknownPortProperty;
+    type SetIter = <BTreeSet<UnknownPortProperty> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.port_props.unknowns_iter()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, GenericRelation, ScalePoint> for PortInfo {
+    type BorrowedElt = &'a ScalePoint;
+    type SetIter = <BTreeSet<ScalePoint> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.scale_pts.par_iter()
     }
 }
