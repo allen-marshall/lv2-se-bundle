@@ -1,6 +1,6 @@
 //! Representation of LV2 ports.
 
-use rayon::iter::{ParallelIterator, IntoParallelRefIterator, IterBridge};
+use rayon::iter::{IntoParallelRefIterator, IterBridge};
 use crate::bundle_model::{HasRelatedSet, NameRelation, ShortNameRelation, DocRelation, TypeRelation};
 use crate::bundle_model::impl_util::{KnownAndUnknownSet, DocumentedImpl, NamedImpl};
 use crate::bundle_model::constants::{PortType, PortDesignation, PortChannel};
@@ -32,18 +32,6 @@ pub struct PortInfo {
 
     /// Unknown LV2 designations (including channel designations) that apply to the port.
     unknown_designations: BTreeSet<UnknownPortDesignation>
-}
-
-impl PortInfo {
-    /// Gets a (parallel) iterator over the known port types to which the port belongs.
-    pub fn known_port_types_iter(&self) -> impl ParallelIterator<Item = PortType> {
-        self.port_types.knowns_iter()
-    }
-
-    /// Gets a (parallel) iterator over the unknown port types to which the port belongs.
-    pub fn unknown_port_types_iter(&self) -> impl ParallelIterator<Item = &UnknownPortType> {
-        self.port_types.unknowns_iter()
-    }
 }
 
 impl<'a> HasRelatedSet<'a, TypeRelation, PortType> for PortInfo {
