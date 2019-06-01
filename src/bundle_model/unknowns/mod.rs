@@ -83,3 +83,81 @@ impl IdentifiedBy<Iri> for UnknownOption {
         &self.iri
     }
 }
+
+/// Represents an LV2 plugin type that this crate doesn't understand.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct UnknownPluginType {
+    /// LV2 plugin types are typically represented by an IRI, so this type is just a wrapper around
+    /// [`Iri`](crate::rdf_util::Iri).
+    iri: Iri
+}
+
+impl UnknownPluginType {
+    /// Constructs a representation of an unknown LV2 plugin type.
+    ///
+    /// # Parameters
+    /// - `iri`: IRI identifying the plugin type.
+    pub fn new(iri: Iri) -> UnknownPluginType {
+        UnknownPluginType {
+            iri
+        }
+    }
+}
+
+impl IdentifiedBy<Iri> for UnknownPluginType {
+    fn id(&self) -> &Iri {
+        &self.iri
+    }
+}
+
+/// Represents an LV2 port type that this crate doesn't understand.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct UnknownPortType {
+    /// LV2 port types are typically represented by an IRI, so this type is just a wrapper around
+    /// [`Iri`](crate::rdf_util::Iri).
+    iri: Iri
+}
+
+impl UnknownPortType {
+    /// Constructs a representation of an unknown LV2 port type.
+    ///
+    /// # Parameters
+    /// - `iri`: IRI identifying the port type.
+    pub fn new(iri: Iri) -> UnknownPortType {
+        UnknownPortType {
+            iri
+        }
+    }
+}
+
+impl IdentifiedBy<Iri> for UnknownPortType {
+    fn id(&self) -> &Iri {
+        &self.iri
+    }
+}
+
+/// Represents an LV2 port designation that this crate doesn't understand.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct UnknownPortDesignation {
+    /// LV2 port designations are typically represented by an IRI, so this type is just a wrapper
+    /// around [`Iri`](crate::rdf_util::Iri).
+    iri: Iri
+}
+
+impl UnknownPortDesignation {
+    /// Constructs a representation of an unknown LV2 port designation.
+    ///
+    /// # Parameters
+    /// - `iri`: IRI identifying the port designation.
+    pub fn new(iri: Iri) -> UnknownPortDesignation {
+        UnknownPortDesignation {
+            iri
+        }
+    }
+}
+
+impl IdentifiedBy<Iri> for UnknownPortDesignation {
+    fn id(&self) -> &Iri {
+        &self.iri
+    }
+}

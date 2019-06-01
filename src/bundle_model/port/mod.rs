@@ -1,66 +1,28 @@
 //! Representation of LV2 ports.
 
+use rayon::iter::{ParallelIterator, IntoParallelRefIterator, IterBridge};
+use crate::bundle_model::{HasRelatedSet, NameRelation, ShortNameRelation, DocRelation, TypeRelation};
+use crate::bundle_model::impl_util::{KnownAndUnknownSet, DocumentedImpl, NamedImpl};
+use crate::bundle_model::constants::{PortType, PortDesignation, PortChannel};
+use crate::bundle_model::unknowns::{UnknownPortType, UnknownPortDesignation};
+use crate::rdf_util::Literal;
+use enumset::{EnumSet, EnumSetIter};
 use std::collections::BTreeSet;
 
-use enumset::EnumSet;
-
-use num_bigint::BigUint;
-
-use ordered_float::OrderedFloat;
-
-use crate::rdf_util::Literal;
-use crate::bundle_model::constants::{AtomType, Unit, PortProperty, PortDesignation, PortChannel};
-
-/// Contains extra information associated with an LV2 atom port.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
-pub struct AtomPortInfo {
-    /// Main atom types that the port can accept in its buffer.
-    main_types: EnumSet<AtomType>,
-
-    /// Element types accepted by the element-accepting atom types in
-    /// [`main_types`](self::AtomPortInfo::main_types). Must be empty if
-    /// [`expects_element_type`](crate::bundle_model::subclasses::StdAtomType::expects_element_type)
-    /// is not true for any of the atom types in [`main_types`](self::AtomPortInfo::main_types).
-    element_types: EnumSet<AtomType>
-}
-
-/// Identifiers for port buffer types understood by this crate.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Ord, PartialOrd, Hash)]
-pub enum PortBufferType {
-    /// Indicates that the port operates on single-channel audio-rate sample data. Samples are
-    /// expected to be of the C `float` type.
-    AudioPort,
-
-    /// Indicates that the port operates on single-channel control-rate sample data (i.e. one sample
-    /// per plugin `run()` call). Samples are expected to be of the C `float` type.
-    ControlPort,
-
-    /// Similar to [`AudioPort`](self::PortBufferType::AudioPort), except this type of port
-    /// explicitly handles control signals (at audio rate) instead of audio signals.
-    CVPort,
-
-    /// Indicates that the port operates on LV2 atoms from a specified set of allowable atom types.
-    AtomPort {
-        /// Additional information about the port, including the allowed atom type(s).
-        atom_port_info: AtomPortInfo
-    }
-}
-
-/// Represents a 'scale point', i.e. a special marked value for a control port.
-#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
-pub struct ScalePoint {
-    /// Labels to be displayed in association with the scale point.
-    labels: BTreeSet<Literal>,
-
-    /// Control port value for the scale point.
-    value: OrderedFloat<f32>
-}
-
 /// Representation of an LV2 port.
-#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
-pub struct Port {
-    /// Standard LV2 port properties that apply to the port.
-    port_props: EnumSet<PortProperty>,
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PortInfo {
+    /// Set of LV2 port types to which the port belongs.
+    port_types: KnownAndUnknownSet<PortType, UnknownPortType>,
+
+    /// Name and short name information.
+    named_impl: NamedImpl,
+
+    /// Documentation information.
+    documented_impl: DocumentedImpl,
+
+    /// Default value for the port.
+    default: Option<Literal>,
 
     /// Standard LV2 designations that apply to the port.
     designations: EnumSet<PortDesignation>,
@@ -68,47 +30,63 @@ pub struct Port {
     /// Standard LV2 channel designations that apply to the port.
     channel_designations: EnumSet<PortChannel>,
 
-    /// Index of the port.
-    index: Option<u32>,
+    /// Unknown LV2 designations (including channel designations) that apply to the port.
+    unknown_designations: BTreeSet<UnknownPortDesignation>
+}
 
-    /// Symbol identifying the port.
-    symbol: Option<String>,
+impl PortInfo {
+    /// Gets a (parallel) iterator over the known port types to which the port belongs.
+    pub fn known_port_types_iter(&self) -> impl ParallelIterator<Item = PortType> {
+        self.port_types.knowns_iter()
+    }
 
-    /// Labels to be displayed in association with the port. Unlike the
-    /// [`symbol`](self::Port::symbol), these labels do not act as identifiers.
-    names: BTreeSet<Literal>,
+    /// Gets a (parallel) iterator over the unknown port types to which the port belongs.
+    pub fn unknown_port_types_iter(&self) -> impl ParallelIterator<Item = &UnknownPortType> {
+        self.port_types.unknowns_iter()
+    }
+}
 
-    /// Short labels (no more than 16 characters) to be displayed in association with the port.
-    /// Unlike the [`symbol`](self::Port::symbol), these labels do not act as identifiers.
-    short_names: BTreeSet<Literal>,
+impl<'a> HasRelatedSet<'a, TypeRelation, PortType> for PortInfo {
+    type BorrowedElt = PortType;
+    type SetIter = IterBridge<EnumSetIter<PortType>>;
 
-    /// Display priority for the port, to be used when not all ports can be shown in the UI. Higher
-    /// values mean more priority.
-    display_priority: Option<BigUint>,
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.port_types.knowns_iter()
+    }
+}
 
-    /// Maximum useful value for the port.
-    max_value: Option<Literal>,
+impl<'a> HasRelatedSet<'a, TypeRelation, UnknownPortType> for PortInfo {
+    type BorrowedElt = &'a UnknownPortType;
+    type SetIter = <BTreeSet<UnknownPortType> as IntoParallelRefIterator<'a>>::Iter;
 
-    /// Minimum useful value for the port.
-    min_value: Option<Literal>,
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.port_types.unknowns_iter()
+    }
+}
 
-    /// Default value for the port.
-    default_value: Option<Literal>,
+impl<'a> HasRelatedSet<'a, NameRelation, Literal> for PortInfo {
+    type BorrowedElt = &'a Literal;
+    type SetIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
-    /// Identifies the units for the port value.
-    unit: Option<Unit>,
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.named_impl.names.par_iter()
+    }
+}
 
-    /// Set of the port's scale points, i.e. marked values that are special in some way.
-    scale_points: BTreeSet<ScalePoint>,
+impl<'a> HasRelatedSet<'a, ShortNameRelation, Literal> for PortInfo {
+    type BorrowedElt = &'a Literal;
+    type SetIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
-    /// Number of evenly spaced steps to use (between the maximum and minimum values) when editing
-    /// the port value through a stepwise interface, such as arrow keys on the keyboard.
-    num_range_steps: Option<BigUint>,
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.named_impl.short_names.par_iter()
+    }
+}
 
-    /// Standard buffer types to which this port can be morphed by the host. An empty set means the
-    /// host cannot change the buffer type.
-    host_morph_types: BTreeSet<PortBufferType>,
+impl<'a> HasRelatedSet<'a, DocRelation, Literal> for PortInfo {
+    type BorrowedElt = &'a Literal;
+    type SetIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
-    /// Standard buffer types supported by this port, before any morphing occurs.
-    buffer_types: BTreeSet<PortBufferType>
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.documented_impl.documentation.par_iter()
+    }
 }

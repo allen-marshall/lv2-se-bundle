@@ -3,11 +3,11 @@
 use std::collections::BTreeSet;
 use crate::rdf_util::{Literal, Iri};
 use enumset::EnumSetIter;
-use crate::bundle_model::constants::{ExtensionData, HostFeature};
-use crate::bundle_model::unknowns::{UnknownHostFeature, UnknownExtensionData, UnknownOption};
+use crate::bundle_model::constants::{ExtensionData, HostFeature, PluginType};
+use crate::bundle_model::unknowns::{UnknownHostFeature, UnknownExtensionData, UnknownOption, UnknownPluginType};
 use num_bigint::BigUint;
-use rayon::iter::{IterBridge, IntoParallelRefIterator};
-use crate::bundle_model::{ResourceVersion, Provider, Requirer, Loadable, IdentifiedBy, OptionallyIdentifiedBy, Named, Documented};
+use rayon::iter::{IterBridge, IntoParallelRefIterator, ParallelIterator};
+use crate::bundle_model::{ResourceVersion, Loadable, IdentifiedBy, OptionallyIdentifiedBy, HasRelatedSet, NameRelation, ShortNameRelation, DocRelation, RequiresRelation, OptionallySupportsRelation, ProvidesRelation};
 use crate::bundle_model::symbol::Symbol;
 use crate::bundle_model::project::ProjectInfo;
 use crate::bundle_model::impl_util::{KnownAndUnknownSet, NamedImpl, DocumentedImpl, HostFeatureRequirer};
@@ -23,6 +23,9 @@ pub struct PluginInfo {
 
     /// URI pointing to the shared library that implements the plugin.
     binary: Iri,
+
+    /// Set of LV2 plugin types to which the plugin belongs.
+    plugin_types: KnownAndUnknownSet<PluginType, UnknownPluginType>,
 
     /// Plugin version.
     version: ResourceVersion,
@@ -58,6 +61,16 @@ pub struct PluginInfo {
 }
 
 impl PluginInfo {
+    /// Gets a (parallel) iterator over the known plugin types to which the plugin belongs.
+    pub fn known_plugin_types_iter(&self) -> impl ParallelIterator<Item = PluginType> {
+        self.plugin_types.knowns_iter()
+    }
+
+    /// Gets a (parallel) iterator over the unknown plugin types to which the plugin belongs.
+    pub fn unknown_plugin_types_iter(&self) -> impl ParallelIterator<Item = &UnknownPluginType> {
+        self.plugin_types.unknowns_iter()
+    }
+
     /// Gets the plugin version specified in the bundle.
     pub fn version(&self) -> &ResourceVersion {
         &self.version
@@ -105,89 +118,107 @@ impl OptionallyIdentifiedBy<Symbol> for PluginInfo {
     }
 }
 
-impl<'a> Named<'a> for PluginInfo {
-    type NamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
-    type ShortNamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
-
-    fn names_iter(&'a self) -> Self::NamesIter {
-        self.named_impl.names.par_iter()
-    }
-
-    fn short_names_iter(&'a self) -> Self::ShortNamesIter {
-        self.named_impl.short_names.par_iter()
-    }
-}
-
-impl<'a> Documented<'a> for PluginInfo {
-    type DocumentationIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
-
-    fn documentation_iter(&'a self) -> Self::DocumentationIter {
-        self.documented_impl.documentation.par_iter()
-    }
-}
-
 impl Loadable for PluginInfo {
     fn binary(&self) -> Option<&Iri> {
         Some(&self.binary)
     }
 }
 
-impl<'a> Provider<'a, ExtensionData> for PluginInfo {
-    type BorrowedElt = ExtensionData;
-    type ProvidedIter = IterBridge<EnumSetIter<ExtensionData>>;
+impl<'a> HasRelatedSet<'a, NameRelation, Literal> for PluginInfo {
+    type BorrowedElt = &'a Literal;
+    type SetIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
-    fn provided_iter(&'a self) -> Self::ProvidedIter {
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.named_impl.names.par_iter()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, ShortNameRelation, Literal> for PluginInfo {
+    type BorrowedElt = &'a Literal;
+    type SetIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.named_impl.short_names.par_iter()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, DocRelation, Literal> for PluginInfo {
+    type BorrowedElt = &'a Literal;
+    type SetIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.documented_impl.documentation.par_iter()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, ProvidesRelation, ExtensionData> for PluginInfo {
+    type BorrowedElt = ExtensionData;
+    type SetIter = IterBridge<EnumSetIter<ExtensionData>>;
+
+    fn set_iter(&'a self) -> Self::SetIter {
         self.provided_extension_data.knowns_iter()
     }
 }
 
-impl<'a> Provider<'a, UnknownExtensionData> for PluginInfo {
+impl<'a> HasRelatedSet<'a, ProvidesRelation, UnknownExtensionData> for PluginInfo {
     type BorrowedElt = &'a UnknownExtensionData;
-    type ProvidedIter = <BTreeSet<UnknownExtensionData> as IntoParallelRefIterator<'a>>::Iter;
+    type SetIter = <BTreeSet<UnknownExtensionData> as IntoParallelRefIterator<'a>>::Iter;
 
-    fn provided_iter(&'a self) -> Self::ProvidedIter {
+    fn set_iter(&'a self) -> Self::SetIter {
         self.provided_extension_data.unknowns_iter()
     }
 }
 
-impl<'a> Requirer<'a, HostFeature> for PluginInfo {
+impl<'a> HasRelatedSet<'a, RequiresRelation, HostFeature> for PluginInfo {
     type BorrowedElt = HostFeature;
-    type RequiredIter = IterBridge<EnumSetIter<HostFeature>>;
-    type OptionallySupportedIter = IterBridge<EnumSetIter<HostFeature>>;
+    type SetIter = IterBridge<EnumSetIter<HostFeature>>;
 
-    fn required_iter(&'a self) -> Self::RequiredIter {
+    fn set_iter(&'a self) -> Self::SetIter {
         self.host_feature_requirer.required_host_features.knowns_iter()
     }
+}
 
-    fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
+impl<'a> HasRelatedSet<'a, RequiresRelation, UnknownHostFeature> for PluginInfo {
+    type BorrowedElt = &'a UnknownHostFeature;
+    type SetIter = <BTreeSet<UnknownHostFeature> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.host_feature_requirer.required_host_features.unknowns_iter()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, HostFeature> for PluginInfo {
+    type BorrowedElt = HostFeature;
+    type SetIter = IterBridge<EnumSetIter<HostFeature>>;
+
+    fn set_iter(&'a self) -> Self::SetIter {
         self.host_feature_requirer.optional_host_features.knowns_iter()
     }
 }
 
-impl<'a> Requirer<'a, UnknownHostFeature> for PluginInfo {
+impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, UnknownHostFeature> for PluginInfo {
     type BorrowedElt = &'a UnknownHostFeature;
-    type RequiredIter = <BTreeSet<UnknownHostFeature> as IntoParallelRefIterator<'a>>::Iter;
-    type OptionallySupportedIter = <BTreeSet<UnknownHostFeature> as IntoParallelRefIterator<'a>>::Iter;
+    type SetIter = <BTreeSet<UnknownHostFeature> as IntoParallelRefIterator<'a>>::Iter;
 
-    fn required_iter(&'a self) -> Self::RequiredIter {
-        self.host_feature_requirer.required_host_features.unknowns_iter()
-    }
-
-    fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
+    fn set_iter(&'a self) -> Self::SetIter {
         self.host_feature_requirer.optional_host_features.unknowns_iter()
     }
 }
 
-impl<'a> Requirer<'a, UnknownOption> for PluginInfo {
+impl<'a> HasRelatedSet<'a, RequiresRelation, UnknownOption> for PluginInfo {
     type BorrowedElt = &'a UnknownOption;
-    type RequiredIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
-    type OptionallySupportedIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
+    type SetIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
 
-    fn required_iter(&'a self) -> Self::RequiredIter {
+    fn set_iter(&'a self) -> Self::SetIter {
         self.host_feature_requirer.required_options.par_iter()
     }
+}
 
-    fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
+impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, UnknownOption> for PluginInfo {
+    type BorrowedElt = &'a UnknownOption;
+    type SetIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
         self.host_feature_requirer.optional_options.par_iter()
     }
 }

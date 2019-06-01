@@ -1,7 +1,7 @@
 //! Representation of LV2 dynamic manifest generator.
 
 use crate::rdf_util::Iri;
-use crate::bundle_model::{Loadable, Requirer, OptionallyIdentifiedBy};
+use crate::bundle_model::{Loadable, OptionallyIdentifiedBy, HasRelatedSet, RequiresRelation, OptionallySupportsRelation};
 use crate::bundle_model::symbol::Symbol;
 use enumset::EnumSetIter;
 use crate::bundle_model::constants::HostFeature;
@@ -44,44 +44,56 @@ impl Loadable for DynManifestInfo {
     }
 }
 
-impl<'a> Requirer<'a, HostFeature> for DynManifestInfo {
+impl<'a> HasRelatedSet<'a, RequiresRelation, HostFeature> for DynManifestInfo {
     type BorrowedElt = HostFeature;
-    type RequiredIter = IterBridge<EnumSetIter<HostFeature>>;
-    type OptionallySupportedIter = IterBridge<EnumSetIter<HostFeature>>;
+    type SetIter = IterBridge<EnumSetIter<HostFeature>>;
 
-    fn required_iter(&'a self) -> Self::RequiredIter {
+    fn set_iter(&'a self) -> Self::SetIter {
         self.host_feature_requirer.required_host_features.knowns_iter()
     }
+}
 
-    fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
+impl<'a> HasRelatedSet<'a, RequiresRelation, UnknownHostFeature> for DynManifestInfo {
+    type BorrowedElt = &'a UnknownHostFeature;
+    type SetIter = <BTreeSet<UnknownHostFeature> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.host_feature_requirer.required_host_features.unknowns_iter()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, HostFeature> for DynManifestInfo {
+    type BorrowedElt = HostFeature;
+    type SetIter = IterBridge<EnumSetIter<HostFeature>>;
+
+    fn set_iter(&'a self) -> Self::SetIter {
         self.host_feature_requirer.optional_host_features.knowns_iter()
     }
 }
 
-impl<'a> Requirer<'a, UnknownHostFeature> for DynManifestInfo {
+impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, UnknownHostFeature> for DynManifestInfo {
     type BorrowedElt = &'a UnknownHostFeature;
-    type RequiredIter = <BTreeSet<UnknownHostFeature> as IntoParallelRefIterator<'a>>::Iter;
-    type OptionallySupportedIter = <BTreeSet<UnknownHostFeature> as IntoParallelRefIterator<'a>>::Iter;
+    type SetIter = <BTreeSet<UnknownHostFeature> as IntoParallelRefIterator<'a>>::Iter;
 
-    fn required_iter(&'a self) -> Self::RequiredIter {
-        self.host_feature_requirer.required_host_features.unknowns_iter()
-    }
-
-    fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
+    fn set_iter(&'a self) -> Self::SetIter {
         self.host_feature_requirer.optional_host_features.unknowns_iter()
     }
 }
 
-impl<'a> Requirer<'a, UnknownOption> for DynManifestInfo {
+impl<'a> HasRelatedSet<'a, RequiresRelation, UnknownOption> for DynManifestInfo {
     type BorrowedElt = &'a UnknownOption;
-    type RequiredIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
-    type OptionallySupportedIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
+    type SetIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
 
-    fn required_iter(&'a self) -> Self::RequiredIter {
+    fn set_iter(&'a self) -> Self::SetIter {
         self.host_feature_requirer.required_options.par_iter()
     }
+}
 
-    fn optionally_supported_iter(&'a self) -> Self::OptionallySupportedIter {
+impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, UnknownOption> for DynManifestInfo {
+    type BorrowedElt = &'a UnknownOption;
+    type SetIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
         self.host_feature_requirer.optional_options.par_iter()
     }
 }

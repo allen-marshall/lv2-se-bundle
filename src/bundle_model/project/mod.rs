@@ -3,7 +3,7 @@
 use crate::rdf_util::{Iri, Literal};
 use std::collections::btree_set::BTreeSet;
 use rayon::iter::IntoParallelRefIterator;
-use crate::bundle_model::{OptionallyIdentifiedBy, Named};
+use crate::bundle_model::{OptionallyIdentifiedBy, HasRelatedSet, NameRelation, ShortNameRelation};
 use crate::bundle_model::symbol::Symbol;
 use crate::bundle_model::impl_util::NamedImpl;
 
@@ -31,15 +31,20 @@ impl OptionallyIdentifiedBy<Symbol> for ProjectInfo {
     }
 }
 
-impl<'a> Named<'a> for ProjectInfo {
-    type NamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
-    type ShortNamesIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
+impl<'a> HasRelatedSet<'a, NameRelation, Literal> for ProjectInfo {
+    type BorrowedElt = &'a Literal;
+    type SetIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
 
-    fn names_iter(&'a self) -> Self::NamesIter {
+    fn set_iter(&'a self) -> Self::SetIter {
         self.named_impl.names.par_iter()
     }
+}
 
-    fn short_names_iter(&'a self) -> Self::ShortNamesIter {
+impl<'a> HasRelatedSet<'a, ShortNameRelation, Literal> for ProjectInfo {
+    type BorrowedElt = &'a Literal;
+    type SetIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
         self.named_impl.short_names.par_iter()
     }
 }

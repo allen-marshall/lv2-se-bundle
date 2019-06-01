@@ -1,8 +1,8 @@
 //! Defines data structures representing information available in an LV2 bundle's RDF data.
 
 use num_bigint::BigUint;
-use rayon::iter::{Chain, ParallelIterator};
-use crate::rdf_util::{Iri, Literal};
+use rayon::iter::ParallelIterator;
+use crate::rdf_util::Iri;
 use std::borrow::Borrow;
 
 pub mod constants;
@@ -94,7 +94,7 @@ pub trait Loadable {
 /// # Parameters
 /// - `R`: Defines the way in which the set elements relate to the instance that "has" the set.
 /// - `T`: Type for elements in the set.
-pub trait HasRelatedSet<R, T: Sync> {
+pub trait HasRelatedSet<'a, R, T: Sync> {
     /// Type of borrowed element returned by the set iterator.
     type BorrowedElt: Borrow<T> + Send;
 
@@ -103,12 +103,12 @@ pub trait HasRelatedSet<R, T: Sync> {
 
     /// Gets a (parallel) iterator over the elements of the set. The returned iterator must not
     /// repeat elements, and may be empty.
-    fn set_iter(&self) -> Self::SetIter;
+    fn set_iter(&'a self) -> Self::SetIter;
 
     /// Checks if the specified element is in the set. The default implementation calls
     /// [`set_iter`](self::HasRelatedSet::set_iter) and searches for the specified element. A more
     /// efficient implementation is likely possible for most implementing types.
-    fn has_elt(&self, to_check: &T) -> bool
+    fn has_elt(&'a self, to_check: &T) -> bool
         where T: Eq
     {
         self.set_iter().any(|elt| elt.borrow() == to_check)
