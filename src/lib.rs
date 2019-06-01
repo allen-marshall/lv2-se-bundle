@@ -13,7 +13,12 @@
 
 #[macro_use]
 extern crate enumset;
+#[macro_use]
+extern crate enum_map;
+#[macro_use]
+extern crate lazy_static;
 
+pub mod enum_graph;
 pub mod rdf_util;
 pub mod bundle_model;
 
