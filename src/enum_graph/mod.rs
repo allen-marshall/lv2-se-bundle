@@ -75,6 +75,16 @@ impl<T: EnumSetType + Enum<EnumSet<T>>> EnumSetDiGraph<T> {
         visited
     }
 
+    /// Finds the set of nodes reachable starting from any of the specified start nodes. Zero-length
+    /// paths are included, so the returned set will always contain the start nodes.
+    ///
+    /// # Parameters
+    /// - `from`: Nodes to start from.
+    pub fn reachable_nodes_from_multi(&self, from: EnumSet<T>) -> EnumSet<T> {
+        from.iter().map(|start_node| self.reachable_nodes(start_node))
+            .fold(EnumSet::empty(), |set0, set1| set0.union(set1))
+    }
+
     /// Adds the specified directed edge to the graph if it is not present.
     ///
     /// # Parameters
@@ -172,6 +182,6 @@ impl<T: EnumSetType + Enum<EnumSet<T>> + Send> FromParallelIterator<(T, T)> for 
 {
     fn from_par_iter<I>(par_iter: I) -> Self where I: IntoParallelIterator<Item = (T, T)> {
         par_iter.into_par_iter().map(once).map(EnumSetDiGraph::from_iter)
-            .reduce(EnumSetDiGraph::new, |set0, set1| set0.union(&set1))
+            .reduce(EnumSetDiGraph::new, |graph0, graph1| graph0.union(&graph1))
     }
 }
