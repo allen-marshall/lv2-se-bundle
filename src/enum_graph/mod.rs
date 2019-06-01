@@ -3,6 +3,8 @@
 use std::cmp::Ordering;
 use enumset::{EnumSetType, EnumSet};
 use enum_map::{Enum, EnumMap};
+use std::iter::{FromIterator, once};
+use rayon::iter::{ParallelIterator, FromParallelIterator, IntoParallelIterator};
 
 /// Represents a directed graph with unlabeled edges (self loops allowed), where the nodes are
 /// compile-time constants defined by an [`EnumSetType`](enumset::EnumSetType) enum.
@@ -106,6 +108,15 @@ impl<T: EnumSetType + Enum<EnumSet<T>>> EnumSetDiGraph<T> {
 
         output
     }
+
+    /// Creates a new graph containing the union of all the edges in the two specified graphs.
+    pub fn union(&self, other: &EnumSetDiGraph<T>) -> Self {
+        let mut output = EnumSetDiGraph::new();
+        for (node, adj_set) in output.adj_sets.iter_mut() {
+            *adj_set = self.adj_sets[node].union(other.adj_sets[node]);
+        }
+        output
+    }
 }
 
 impl<T: EnumSetType + Enum<EnumSet<T>>> Clone for EnumSetDiGraph<T> where
@@ -142,5 +153,25 @@ impl<T: EnumSetType + Enum<EnumSet<T>>> Ord for EnumSetDiGraph<T> {
         }
 
         Ordering::Equal
+    }
+}
+
+impl<T: EnumSetType + Enum<EnumSet<T>>> FromIterator<(T, T)> for EnumSetDiGraph<T> {
+    fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item = (T, T)> {
+        let mut output = EnumSetDiGraph::new();
+        for (from, to) in iter {
+            output.insert_edge(from, to);
+        }
+
+        output
+    }
+}
+
+impl<T: EnumSetType + Enum<EnumSet<T>> + Send> FromParallelIterator<(T, T)> for EnumSetDiGraph<T> where
+    <T as Enum<EnumSet<T>>>::Array: Send
+{
+    fn from_par_iter<I>(par_iter: I) -> Self where I: IntoParallelIterator<Item = (T, T)> {
+        par_iter.into_par_iter().map(once).map(EnumSetDiGraph::from_iter)
+            .reduce(EnumSetDiGraph::new, |set0, set1| set0.union(&set1))
     }
 }
