@@ -115,6 +115,12 @@ pub trait HasRelatedSet<'a, R, T: Sync> {
     }
 }
 
+/// Relation type for [`HasRelatedSet`](self::HasRelatedSet), which does not specify the
+/// relationship between the set elements and the instance that "has" the set. This is not meant to
+/// indicate an unknown or undefined relationship; it is simply meant to be used when the
+/// relationship is clear from the set element type.
+pub enum GenericRelation {}
+
 /// Relation type for [`HasRelatedSet`](self::HasRelatedSet), which indicates that the set elements
 /// are names for the instance that "has" the set. Multiple language-tagged names are allowed in
 /// order to support multilingual naming.

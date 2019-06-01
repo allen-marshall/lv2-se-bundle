@@ -1,7 +1,7 @@
 //! Representation of LV2 ports.
 
-use rayon::iter::{IntoParallelRefIterator, IterBridge};
-use crate::bundle_model::{HasRelatedSet, NameRelation, ShortNameRelation, DocRelation, TypeRelation};
+use rayon::iter::{IntoParallelRefIterator, IterBridge, ParallelBridge};
+use crate::bundle_model::{HasRelatedSet, NameRelation, ShortNameRelation, DocRelation, TypeRelation, GenericRelation};
 use crate::bundle_model::impl_util::{KnownAndUnknownSet, DocumentedImpl, NamedImpl};
 use crate::bundle_model::constants::{PortType, PortDesignation, PortChannel};
 use crate::bundle_model::unknowns::{UnknownPortType, UnknownPortDesignation};
@@ -76,5 +76,32 @@ impl<'a> HasRelatedSet<'a, DocRelation, Literal> for PortInfo {
 
     fn set_iter(&'a self) -> Self::SetIter {
         self.documented_impl.documentation.par_iter()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, GenericRelation, PortDesignation> for PortInfo {
+    type BorrowedElt = PortDesignation;
+    type SetIter = IterBridge<EnumSetIter<PortDesignation>>;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.designations.iter().par_bridge()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, GenericRelation, PortChannel> for PortInfo {
+    type BorrowedElt = PortChannel;
+    type SetIter = IterBridge<EnumSetIter<PortChannel>>;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.channel_designations.iter().par_bridge()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, GenericRelation, UnknownPortDesignation> for PortInfo {
+    type BorrowedElt = &'a UnknownPortDesignation;
+    type SetIter = <BTreeSet<UnknownPortDesignation> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.unknown_designations.par_iter()
     }
 }
