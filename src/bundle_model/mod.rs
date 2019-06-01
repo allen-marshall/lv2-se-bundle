@@ -6,6 +6,7 @@ use crate::rdf_util::{Iri, Literal};
 use std::borrow::Borrow;
 
 pub mod constants;
+pub mod implications;
 pub mod unknowns;
 pub mod symbol;
 pub mod project;
