@@ -10,6 +10,7 @@ use crate::rdf_util::Literal;
 use enumset::{EnumSet, EnumSetIter};
 use std::collections::BTreeSet;
 use ordered_float::OrderedFloat;
+use num_bigint::BigUint;
 
 /// Represents a scale point, i.e. a special marked value for a control port.
 #[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd, Hash)]
@@ -72,7 +73,14 @@ pub struct PortInfo {
     channel_designations: EnumSet<PortChannel>,
 
     /// Unknown LV2 designations (including channel designations) that apply to the port.
-    unknown_designations: BTreeSet<UnknownPortDesignation>
+    unknown_designations: BTreeSet<UnknownPortDesignation>,
+
+    /// Minimum allowed buffer size for the port, in bytes.
+    min_buffer_size: Option<BigUint>,
+
+    /// Can be used to specify that the port's buffer must be at least as large as the largest of
+    /// some other set of port buffer sizes. LV2 symbols are used to identify the ports in the set.
+    buffer_as_large_as: BTreeSet<Symbol>
 }
 
 impl IdentifiedBy<u32> for PortInfo {
