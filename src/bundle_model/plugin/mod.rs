@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 use crate::rdf_util::{Literal, Iri};
 use enumset::EnumSetIter;
-use crate::bundle_model::constants::{ExtensionData, HostFeature, PluginType};
+use crate::bundle_model::constants::{ExtensionData, HostFeature, PluginType, Lv2Option};
 use crate::bundle_model::unknowns::{UnknownHostFeature, UnknownExtensionData, UnknownOption, UnknownPluginType};
 use num_bigint::BigUint;
 use rayon::iter::{IterBridge, IntoParallelRefIterator, ParallelIterator};
@@ -191,6 +191,24 @@ impl<'a> HasRelatedSet<'a, RequiresRelation, UnknownHostFeature> for PluginInfo 
     }
 }
 
+impl<'a> HasRelatedSet<'a, RequiresRelation, Lv2Option> for PluginInfo {
+    type BorrowedElt = Lv2Option;
+    type SetIter = IterBridge<EnumSetIter<Lv2Option>>;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.host_feature_requirer.required_options.knowns_iter()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, RequiresRelation, UnknownOption> for PluginInfo {
+    type BorrowedElt = &'a UnknownOption;
+    type SetIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.host_feature_requirer.required_options.unknowns_iter()
+    }
+}
+
 impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, HostFeature> for PluginInfo {
     type BorrowedElt = HostFeature;
     type SetIter = IterBridge<EnumSetIter<HostFeature>>;
@@ -209,12 +227,12 @@ impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, UnknownHostFeature> for P
     }
 }
 
-impl<'a> HasRelatedSet<'a, RequiresRelation, UnknownOption> for PluginInfo {
-    type BorrowedElt = &'a UnknownOption;
-    type SetIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
+impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, Lv2Option> for PluginInfo {
+    type BorrowedElt = Lv2Option;
+    type SetIter = IterBridge<EnumSetIter<Lv2Option>>;
 
     fn set_iter(&'a self) -> Self::SetIter {
-        self.host_feature_requirer.required_options.par_iter()
+        self.host_feature_requirer.optional_options.knowns_iter()
     }
 }
 
@@ -223,6 +241,6 @@ impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, UnknownOption> for Plugin
     type SetIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
 
     fn set_iter(&'a self) -> Self::SetIter {
-        self.host_feature_requirer.optional_options.par_iter()
+        self.host_feature_requirer.optional_options.unknowns_iter()
     }
 }

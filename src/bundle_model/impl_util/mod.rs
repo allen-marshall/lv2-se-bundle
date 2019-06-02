@@ -4,7 +4,7 @@ use enumset::{EnumSet, EnumSetIter, EnumSetType};
 use std::collections::BTreeSet;
 use rayon::iter::{IterBridge, IntoParallelRefIterator, ParallelBridge};
 use crate::rdf_util::Literal;
-use crate::bundle_model::constants::HostFeature;
+use crate::bundle_model::constants::{HostFeature, Lv2Option};
 use crate::bundle_model::unknowns::{UnknownHostFeature, UnknownOption};
 
 /// Represents a set that contains both "known" items and "unknown" items. The "unknown" items
@@ -75,9 +75,9 @@ pub(crate) struct HostFeatureRequirer {
 
     /// Required LV2 options. This set should not intersect with
     /// [`optional_options`](self::HostFeatureRequirer::optional_options)
-    pub(crate) required_options: BTreeSet<UnknownOption>,
+    pub(crate) required_options: KnownAndUnknownSet<Lv2Option, UnknownOption>,
 
     /// Optionally supported LV2 options. This set should not intersect with
     /// [`required_options`](self::HostFeatureRequirer::required_options)
-    pub(crate) optional_options: BTreeSet<UnknownOption>
+    pub(crate) optional_options: KnownAndUnknownSet<Lv2Option, UnknownOption>
 }

@@ -222,6 +222,26 @@ pub enum UiPortProtocol {
     Peak
 }
 
+/// Identifiers for standard LV2 options that may be set by a host.
+#[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
+pub enum Lv2Option {
+    /// Specifies the maximum block length (in samples) that the host might ask the plugin to
+    /// process at once.
+    MaxBlockLength,
+
+    /// Specifies the minimum block length (in samples) that the host might ask the plugin to
+    /// process at once.
+    MinBlockLength,
+
+    /// Hint given by the host to indicate the typical block length (in samples) that it will ask
+    /// the plugin to process at once.
+    NominalBlockLength,
+
+    /// Specifies the maximum sequence size (in bytes) that the host might ask the plugin to process
+    /// at once.
+    SequenceSize
+}
+
 /// Identifiers for standard extension interfaces that a plugin or LV2 UI can provide.
 #[derive(Debug, PartialOrd, Ord, Hash, EnumSetType, Enum)]
 pub enum ExtensionData {

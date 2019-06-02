@@ -4,7 +4,7 @@ use crate::rdf_util::Iri;
 use crate::bundle_model::{Loadable, OptionallyIdentifiedBy, HasRelatedSet, RequiresRelation, OptionallySupportsRelation};
 use crate::bundle_model::symbol::Symbol;
 use enumset::EnumSetIter;
-use crate::bundle_model::constants::HostFeature;
+use crate::bundle_model::constants::{HostFeature, Lv2Option};
 use crate::bundle_model::unknowns::{UnknownHostFeature, UnknownOption};
 use crate::bundle_model::impl_util::HostFeatureRequirer;
 use rayon::iter::{IterBridge, IntoParallelRefIterator};
@@ -62,6 +62,24 @@ impl<'a> HasRelatedSet<'a, RequiresRelation, UnknownHostFeature> for DynManifest
     }
 }
 
+impl<'a> HasRelatedSet<'a, RequiresRelation, Lv2Option> for DynManifestInfo {
+    type BorrowedElt = Lv2Option;
+    type SetIter = IterBridge<EnumSetIter<Lv2Option>>;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.host_feature_requirer.required_options.knowns_iter()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, RequiresRelation, UnknownOption> for DynManifestInfo {
+    type BorrowedElt = &'a UnknownOption;
+    type SetIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.host_feature_requirer.required_options.unknowns_iter()
+    }
+}
+
 impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, HostFeature> for DynManifestInfo {
     type BorrowedElt = HostFeature;
     type SetIter = IterBridge<EnumSetIter<HostFeature>>;
@@ -80,12 +98,12 @@ impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, UnknownHostFeature> for D
     }
 }
 
-impl<'a> HasRelatedSet<'a, RequiresRelation, UnknownOption> for DynManifestInfo {
-    type BorrowedElt = &'a UnknownOption;
-    type SetIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
+impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, Lv2Option> for DynManifestInfo {
+    type BorrowedElt = Lv2Option;
+    type SetIter = IterBridge<EnumSetIter<Lv2Option>>;
 
     fn set_iter(&'a self) -> Self::SetIter {
-        self.host_feature_requirer.required_options.par_iter()
+        self.host_feature_requirer.optional_options.knowns_iter()
     }
 }
 
@@ -94,6 +112,6 @@ impl<'a> HasRelatedSet<'a, OptionallySupportsRelation, UnknownOption> for DynMan
     type SetIter = <BTreeSet<UnknownOption> as IntoParallelRefIterator<'a>>::Iter;
 
     fn set_iter(&'a self) -> Self::SetIter {
-        self.host_feature_requirer.optional_options.par_iter()
+        self.host_feature_requirer.optional_options.unknowns_iter()
     }
 }
