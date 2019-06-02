@@ -75,6 +75,14 @@ pub struct PortInfo {
     /// Unknown LV2 designations (including channel designations) that apply to the port.
     unknown_designations: BTreeSet<UnknownPortDesignation>,
 
+    /// Indicates how 'important' it is to display the port, for scenarios where not all ports can
+    /// be displayed. A higher value means higher priority.
+    display_priority: Option<BigUint>,
+
+    /// Indicates into how many evenly spaced steps the port's range should be divided, when using a
+    /// step-based controller such as arrow keys.
+    range_steps: Option<BigUint>,
+
     /// Minimum allowed buffer size for the port, in bytes.
     min_buffer_size: Option<BigUint>,
 
