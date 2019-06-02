@@ -192,6 +192,12 @@ pub enum HostFeature {
     /// outside the audio thread.
     WorkSchedule,
 
+    /// Indicates that the host provides a direct handle to a plugin instance's extension data
+    /// interfaces. Typically, this would be used by plugin UIs rather than plugins. The LV2
+    /// specification states that use of this feature is highly discouraged, but it is not
+    /// deprecated at the time of this writing.
+    ExtensionDataAccess,
+
     /// Indicates that the host provides a direct handle to a plugin instance. Typically, this would
     /// be used by plugin UIs rather than plugins. The LV2 specification states that use of this
     /// feature is highly discouraged, but it is not deprecated at the time of this writing.
