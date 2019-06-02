@@ -3,8 +3,15 @@
 
 // TODO: Maybe disallow construction of UnknownX when the IRI *is* understood by the crate?
 
-use crate::bundle_model::IdentifiedBy;
-use crate::rdf_util::Iri;
+use crate::bundle_model::{IdentifiedBy, OptionallyIdentifiedBy, HasRelatedSet, LabelRelation};
+use crate::bundle_model::symbol::Symbol;
+use crate::rdf_util::{Iri, Literal};
+use std::collections::BTreeSet;
+use rayon::iter::IntoParallelRefIterator;
+
+// TODO: Maybe add representation of literals and blank nodes in the UnknownX types? Handling of
+// blank nodes probably needs to be limited, but it would be nice if we could at least have UnknownX
+// objects compare unequal when they came from different blank nodes.
 
 /// Represents a type of LV2 extension data interface that this crate doesn't understand.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -156,18 +163,18 @@ impl UnknownPortDesignation {
     }
 }
 
+impl IdentifiedBy<Iri> for UnknownPortDesignation {
+    fn id(&self) -> &Iri {
+        &self.iri
+    }
+}
+
 /// Represents an LV2 port property that this crate doesn't understand.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct UnknownPortProperty {
     /// LV2 port properties are typically represented by an IRI, so this type is just a wrapper
     /// around [`Iri`](crate::rdf_util::Iri).
     iri: Iri
-}
-
-impl IdentifiedBy<Iri> for UnknownPortDesignation {
-    fn id(&self) -> &Iri {
-        &self.iri
-    }
 }
 
 impl UnknownPortProperty {
@@ -185,5 +192,44 @@ impl UnknownPortProperty {
 impl IdentifiedBy<Iri> for UnknownPortProperty {
     fn id(&self) -> &Iri {
         &self.iri
+    }
+}
+
+/// Represents an LV2 port unit that this crate doesn't understand.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct UnknownUnit {
+    /// LV2 units may be represented by an IRI.
+    iri: Option<Iri>,
+
+    /// Labels for the unit. Potentially multilingual.
+    labels: BTreeSet<Literal>,
+
+    /// LV2 symbol for the unit.
+    symbol: Option<Symbol>,
+
+    /// Format string for rendering a value in the unit.
+    render_str: Option<String>
+
+    // TODO: Represent unit conversions.
+}
+
+impl OptionallyIdentifiedBy<Iri> for UnknownUnit {
+    fn id(&self) -> Option<&Iri> {
+        self.iri.as_ref()
+    }
+}
+
+impl OptionallyIdentifiedBy<Symbol> for UnknownUnit {
+    fn id(&self) -> Option<&Symbol> {
+        self.symbol.as_ref()
+    }
+}
+
+impl<'a> HasRelatedSet<'a, LabelRelation, Literal> for UnknownUnit {
+    type BorrowedElt = &'a Literal;
+    type SetIter = <BTreeSet<Literal> as IntoParallelRefIterator<'a>>::Iter;
+
+    fn set_iter(&'a self) -> Self::SetIter {
+        self.labels.par_iter()
     }
 }
