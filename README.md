@@ -7,7 +7,7 @@
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/allen-marshall/lv2-se-bundle.svg)](http://isitmaintained.com/project/allen-marshall/lv2-se-bundle "Percentage of issues still open")
 <!-- TODO: Add license badge once crate is ready to be published. -->
 
-**Warning:** This library is in early development and is not yet usable.
+**Warning:** Do not use. Development of this library is discontinued for the foreseeable future, and the library never reached a usable state.
 
 A library for reading/writing [LV2](http://lv2plug.in) bundle RDF data to/from data structures that can be more easily
 processed by Rust code. The 'se' stands for *safety* and *ease of use*, which are two of this project's main priorities.
